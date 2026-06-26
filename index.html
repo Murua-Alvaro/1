@@ -13,6 +13,7 @@
       padding: 0;
       font-family: Arial, sans-serif;
       background: #f5f7fb;
+      color: #111827;
     }
 
     .panel {
@@ -20,7 +21,7 @@
       margin: 24px auto 16px;
       padding: 0 18px;
       display: grid;
-      grid-template-columns: 1fr 1fr 1.35fr;
+      grid-template-columns: 0.8fr 1.4fr;
       gap: 18px;
       align-items: stretch;
     }
@@ -28,54 +29,63 @@
     .card {
       background: white;
       border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      padding: 18px;
+      border-radius: 18px;
+      padding: 22px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 24px;
+      margin: 0 0 10px;
+      font-size: 30px;
+      line-height: 1.1;
       color: #111827;
     }
 
     p {
       margin: 0;
       color: #475467;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.5;
     }
 
     label {
-      font-weight: 700;
+      font-weight: 800;
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       color: #111827;
+      font-size: 20px;
     }
 
     select {
       width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
       border: 1px solid #d0d5dd;
-      font-size: 16px;
+      font-size: 18px;
       background: white;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: #111827;
+      box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
     }
 
     .actions {
       display: flex;
       gap: 10px;
-      margin-top: 2px;
+      margin-top: 4px;
       flex-wrap: wrap;
     }
 
     button {
       border: 0;
       border-radius: 999px;
-      padding: 10px 14px;
+      padding: 11px 16px;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 15px;
       background: #111827;
       color: white;
     }
@@ -87,10 +97,10 @@
 
     #map {
       max-width: 1280px;
-      height: 760px;
+      height: 780px;
       margin: 0 auto 28px;
       border: 1px solid #d0d5dd;
-      border-radius: 18px;
+      border-radius: 22px;
       overflow: hidden;
       box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
     }
@@ -106,32 +116,54 @@
 
     .badge {
       display: inline-block;
-      padding: 4px 9px;
+      padding: 5px 10px;
       border-radius: 999px;
       color: white;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 12px;
       margin-top: 6px;
     }
 
-    .stats-grid {
+    .summary {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 12px;
+      gap: 10px;
+      margin-top: 18px;
     }
 
-    .stat {
+    .summary-item {
       background: #f8fafc;
       border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 13px;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 14px;
     }
 
-    .stat b {
+    .summary-item b {
       display: block;
-      font-size: 18px;
+      font-size: 24px;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .detail {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .detail b {
+      display: block;
+      font-size: 20px;
       color: #111827;
       margin-bottom: 2px;
     }
@@ -163,6 +195,11 @@
         height: 650px;
         border-radius: 0;
       }
+
+      .summary,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -171,39 +208,49 @@
 
   <div class="panel">
     <div class="card">
-      <label for="districtSelect">Filtrar por distrito</label>
-      <select id="districtSelect">
-        <option value="">Cargando distritos...</option>
-      </select>
-
-      <div class="actions">
-        <button id="showAllBtn" class="secondary">Ver todas las secciones</button>
-      </div>
-    </div>
-
-    <div class="card">
       <label for="sectionSelect">Seleccionar sección</label>
       <select id="sectionSelect">
         <option value="">Cargando secciones...</option>
       </select>
 
-      <p>El mapa se cruza por <b>sección</b>. El distrito sólo funciona como filtro.</p>
+      <div class="actions">
+        <button id="showAllBtn" class="secondary">Ver todas las secciones</button>
+      </div>
+
+      <div class="summary">
+        <div class="summary-item">
+          <b id="totalSecciones">-</b>
+          Secciones
+        </div>
+        <div class="summary-item">
+          <b id="totalAspirantes">-</b>
+          Aspirantes
+        </div>
+      </div>
     </div>
 
     <div class="card">
       <h1 id="mainTitle">Mapa de aspirantes por sección</h1>
       <p id="mainInfo">
-        Selecciona una sección o filtra por distrito para ver aspirantes registrados, semáforo y distribución por edad.
+        Selecciona una sección para ver aspirantes registrados, semáforo y distribución por edad.
       </p>
 
-      <div class="stats-grid">
-        <div class="stat">
-          <b id="totalSecciones">-</b>
-          Secciones visibles
+      <div class="detail-grid" id="detailGrid" style="display:none;">
+        <div class="detail">
+          <b id="edad18">0</b>
+          18 a 29
         </div>
-        <div class="stat">
-          <b id="totalAspirantes">-</b>
-          Aspirantes visibles
+        <div class="detail">
+          <b id="edad30">0</b>
+          30 a 44
+        </div>
+        <div class="detail">
+          <b id="edad45">0</b>
+          45 a 59
+        </div>
+        <div class="detail">
+          <b id="edad60">0</b>
+          60 o más
         </div>
       </div>
     </div>
@@ -223,17 +270,20 @@
 
     let geojsonLayer;
     let selectedSection = null;
-    let selectedDistrict = '';
     let aspirantesPorSeccion = {};
     let geojsonDataGlobal = null;
 
-    const districtSelect = document.getElementById('districtSelect');
     const sectionSelect = document.getElementById('sectionSelect');
     const showAllBtn = document.getElementById('showAllBtn');
     const mainTitle = document.getElementById('mainTitle');
     const mainInfo = document.getElementById('mainInfo');
     const totalSeccionesEl = document.getElementById('totalSecciones');
     const totalAspirantesEl = document.getElementById('totalAspirantes');
+    const detailGrid = document.getElementById('detailGrid');
+    const edad18 = document.getElementById('edad18');
+    const edad30 = document.getElementById('edad30');
+    const edad45 = document.getElementById('edad45');
+    const edad60 = document.getElementById('edad60');
 
     function getSeccion(feature) {
       return String(feature.properties.seccion);
@@ -268,26 +318,19 @@
       return '#43A047';
     }
 
-    function isVisibleByFilter(feature) {
-      if (!selectedDistrict) return true;
-      return String(getDistrito(feature)) === String(selectedDistrict);
-    }
-
     function styleBySection(feature) {
       const seccion = getSeccion(feature);
       const datos = getDatosSeccion(seccion);
       const total = Number(datos.total_aspirantes || 0);
       const color = datos.color || getColor(total);
-
-      const visible = isVisibleByFilter(feature);
       const isSelected = selectedSection && String(selectedSection) === String(seccion);
 
       return {
         color: isSelected ? '#111827' : '#334155',
-        weight: isSelected ? 3 : 1,
+        weight: isSelected ? 4 : 1,
         fillColor: color,
-        fillOpacity: visible ? (isSelected ? 0.85 : 0.52) : 0.06,
-        opacity: visible ? 1 : 0.18
+        fillOpacity: isSelected ? 0.88 : 0.52,
+        opacity: 1
       };
     }
 
@@ -311,7 +354,22 @@
       `;
     }
 
-    function updateMainInfoForSection(seccion) {
+    function updateStats() {
+      if (!geojsonDataGlobal) return;
+
+      const secciones = geojsonDataGlobal.features
+        .map(f => String(f.properties.seccion))
+        .filter(Boolean);
+
+      const total = secciones.reduce((acc, seccion) => {
+        return acc + Number(getDatosSeccion(seccion).total_aspirantes || 0);
+      }, 0);
+
+      totalSeccionesEl.innerText = secciones.length;
+      totalAspirantesEl.innerText = total;
+    }
+
+    function updateInfoForSection(seccion) {
       const datos = getDatosSeccion(seccion);
       const total = Number(datos.total_aspirantes || 0);
       const semaforo = datos.semaforo || getSemaforo(total);
@@ -323,59 +381,16 @@
       mainInfo.innerHTML = `
         <b>Distrito:</b> ${distrito}<br>
         <b>Aspirantes registrados:</b> ${total}<br>
-        <b>Semáforo:</b> <span style="font-weight:700; color:${color};">${semaforo}</span><br>
-        <b>Rango de edad dominante:</b> ${datos.rango_edad_principal || 'Sin datos'}<br><br>
-        <b>Rangos de edad:</b><br>
-        18 a 29: ${datos.edad_18_29 || 0}<br>
-        30 a 44: ${datos.edad_30_44 || 0}<br>
-        45 a 59: ${datos.edad_45_59 || 0}<br>
-        60 o más: ${datos.edad_60_mas || 0}
+        <b>Semáforo:</b> <span style="font-weight:800; color:${color};">${semaforo}</span><br>
+        <b>Rango de edad dominante:</b> ${datos.rango_edad_principal || 'Sin datos'}
       `;
-    }
 
-    function updateMainInfoForDistrict(distrito) {
-      const visibleFeatures = geojsonDataGlobal.features.filter(f => String(f.properties.distrito_l) === String(distrito));
-      const secciones = visibleFeatures.map(f => String(f.properties.seccion));
-      const total = secciones.reduce((acc, seccion) => acc + Number(getDatosSeccion(seccion).total_aspirantes || 0), 0);
+      edad18.innerText = datos.edad_18_29 || 0;
+      edad30.innerText = datos.edad_30_44 || 0;
+      edad45.innerText = datos.edad_45_59 || 0;
+      edad60.innerText = datos.edad_60_mas || 0;
 
-      let rojos = 0;
-      let amarillos = 0;
-      let verdes = 0;
-
-      secciones.forEach(seccion => {
-        const t = Number(getDatosSeccion(seccion).total_aspirantes || 0);
-        const sem = getDatosSeccion(seccion).semaforo || getSemaforo(t);
-        if (sem === 'Rojo') rojos++;
-        if (sem === 'Amarillo') amarillos++;
-        if (sem === 'Verde') verdes++;
-      });
-
-      mainTitle.innerText = `Distrito ${distrito}`;
-      mainInfo.innerHTML = `
-        <b>Secciones visibles:</b> ${secciones.length}<br>
-        <b>Aspirantes registrados:</b> ${total}<br><br>
-        <b>Semáforo por secciones:</b><br>
-        Rojo: ${rojos}<br>
-        Amarillo: ${amarillos}<br>
-        Verde: ${verdes}
-      `;
-    }
-
-    function updateStats() {
-      if (!geojsonDataGlobal) return;
-
-      const visibleFeatures = geojsonDataGlobal.features.filter(f => {
-        if (!selectedDistrict) return true;
-        return String(f.properties.distrito_l) === String(selectedDistrict);
-      });
-
-      const visibleSections = visibleFeatures.map(f => String(f.properties.seccion));
-      const total = visibleSections.reduce((acc, seccion) => {
-        return acc + Number(getDatosSeccion(seccion).total_aspirantes || 0);
-      }, 0);
-
-      totalSeccionesEl.innerText = visibleSections.length;
-      totalAspirantesEl.innerText = total;
+      detailGrid.style.display = 'grid';
     }
 
     function refreshLayerStyles() {
@@ -386,48 +401,10 @@
       });
     }
 
-    function fitVisibleBounds() {
-      if (!geojsonLayer) return;
-
-      let bounds = null;
-
-      geojsonLayer.eachLayer(layer => {
-        if (isVisibleByFilter(layer.feature)) {
-          if (!bounds) {
-            bounds = layer.getBounds();
-          } else {
-            bounds.extend(layer.getBounds());
-          }
-        }
-      });
-
-      if (bounds) {
-        map.fitBounds(bounds, { padding: [25, 25] });
-      }
-    }
-
-    function populateSections() {
-      if (!geojsonDataGlobal) return;
-
-      const features = geojsonDataGlobal.features.filter(f => {
-        if (!selectedDistrict) return true;
-        return String(f.properties.distrito_l) === String(selectedDistrict);
-      });
-
-      const secciones = [...new Set(features.map(f => String(f.properties.seccion)).filter(Boolean))]
-        .sort((a, b) => Number(a) - Number(b));
-
-      sectionSelect.innerHTML = '<option value="">Selecciona una sección</option>';
-
-      secciones.forEach(seccion => {
-        const datos = getDatosSeccion(seccion);
-        const total = Number(datos.total_aspirantes || 0);
-        const semaforo = datos.semaforo || getSemaforo(total);
-
-        const option = document.createElement('option');
-        option.value = seccion;
-        option.textContent = `Sección ${seccion} - ${total} aspirantes - ${semaforo}`;
-        sectionSelect.appendChild(option);
+    function scrollToMap() {
+      document.getElementById('map').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       });
     }
 
@@ -449,41 +426,22 @@
       });
 
       if (targetLayer) {
-        selectedDistrict = getDistrito(targetLayer.feature);
-        districtSelect.value = selectedDistrict;
-        populateSections();
-        sectionSelect.value = seccion;
-        refreshLayerStyles();
         targetLayer.bringToFront();
-        map.fitBounds(targetLayer.getBounds(), { padding: [40, 40] });
-        targetLayer.openPopup();
-        updateMainInfoForSection(seccion);
-        updateStats();
+        updateInfoForSection(seccion);
+        refreshLayerStyles();
+
+        setTimeout(() => {
+          scrollToMap();
+          map.fitBounds(targetLayer.getBounds(), { padding: [45, 45] });
+          targetLayer.openPopup();
+        }, 150);
       }
     }
 
-    function selectDistrict(distrito) {
-      selectedDistrict = String(distrito);
-      selectedSection = null;
-
-      districtSelect.value = selectedDistrict;
-      populateSections();
-      sectionSelect.value = '';
-
-      refreshLayerStyles();
-      fitVisibleBounds();
-      updateMainInfoForDistrict(distrito);
-      updateStats();
-    }
-
     function showAllSections() {
-      selectedDistrict = '';
       selectedSection = null;
-
-      districtSelect.value = '';
       sectionSelect.value = '';
 
-      populateSections();
       refreshLayerStyles();
 
       if (geojsonLayer) {
@@ -491,8 +449,11 @@
       }
 
       mainTitle.innerText = 'Mapa de aspirantes por sección';
-      mainInfo.innerHTML = 'Selecciona una sección o filtra por distrito para ver aspirantes registrados, semáforo y distribución por edad.';
+      mainInfo.innerHTML = 'Selecciona una sección para ver aspirantes registrados, semáforo y distribución por edad.';
+      detailGrid.style.display = 'none';
+
       updateStats();
+      scrollToMap();
     }
 
     Promise.all([
@@ -508,14 +469,10 @@
           onEachFeature: function(feature, layer) {
             const props = feature.properties;
             const seccion = String(props.seccion);
-            const distrito = String(props.distrito_l);
 
             layer.bindPopup(() => popupContent(props));
 
             layer.on('click', function() {
-              selectedDistrict = distrito;
-              districtSelect.value = distrito;
-              populateSections();
               sectionSelect.value = seccion;
               selectSection(seccion);
             });
@@ -524,39 +481,22 @@
 
         map.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
 
-        const distritos = [...new Set(
+        const secciones = [...new Set(
           geojsonData.features
-            .map(f => String(f.properties.distrito_l))
+            .map(f => String(f.properties.seccion))
             .filter(Boolean)
         )].sort((a, b) => Number(a) - Number(b));
 
-        districtSelect.innerHTML = '<option value="">Todos los distritos</option>';
+        sectionSelect.innerHTML = '<option value="">Selecciona una sección</option>';
 
-        distritos.forEach(distrito => {
-          const seccionesDistrito = geojsonData.features
-            .filter(f => String(f.properties.distrito_l) === String(distrito))
-            .map(f => String(f.properties.seccion));
-
-          const total = seccionesDistrito.reduce((acc, seccion) => {
-            return acc + Number(getDatosSeccion(seccion).total_aspirantes || 0);
-          }, 0);
-
+        secciones.forEach(seccion => {
           const option = document.createElement('option');
-          option.value = distrito;
-          option.textContent = `Distrito ${distrito} - ${seccionesDistrito.length} secciones - ${total} aspirantes`;
-          districtSelect.appendChild(option);
+          option.value = seccion;
+          option.textContent = `Sección ${seccion}`;
+          sectionSelect.appendChild(option);
         });
 
-        populateSections();
         updateStats();
-
-        districtSelect.addEventListener('change', function() {
-          if (this.value) {
-            selectDistrict(this.value);
-          } else {
-            showAllSections();
-          }
-        });
 
         sectionSelect.addEventListener('change', function() {
           if (this.value) {
@@ -582,7 +522,6 @@
         legend.addTo(map);
       })
       .catch(error => {
-        districtSelect.innerHTML = '<option>Error al cargar datos</option>';
         sectionSelect.innerHTML = '<option>Error al cargar datos</option>';
         mainTitle.innerText = 'Error al cargar el mapa';
         mainInfo.innerText = 'Revisa que los archivos mazatlan_secciones_5pct_wgs84.geojson y secciones_aspirantes.json estén en el mismo repositorio.';
