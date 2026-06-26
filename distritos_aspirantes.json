@@ -1,0 +1,19 @@
+{
+  "actualizado": "2026-06-26",
+  "fuente": "Airtable - tabla Distritos Mapa INE",
+  "llave_geojson": "distrito_l",
+  "distritos": {
+    "22": {
+      "distrito_ine": "22",
+      "total_aspirantes": 23,
+      "semaforo": "Verde",
+      "color": "#43A047"
+    },
+    "23": {
+      "distrito_ine": "23",
+      "total_aspirantes": 59,
+      "semaforo": "Verde",
+      "color": "#43A047"
+    }
+  }
+}
