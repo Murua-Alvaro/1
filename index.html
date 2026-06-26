@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de secciones - Mazatlán</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+    }
+
+    .panel {
+      max-width: 1200px;
+      margin: 24px auto 16px;
+      padding: 0 18px;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0;
+      color: #475467;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    label {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #d0d5dd;
+      font-size: 16px;
+      background: white;
+    }
+
+    #map {
+      max-width: 1200px;
+      height: 720px;
+      margin: 0 auto 28px;
+      border: 1px solid #d0d5dd;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+    }
+
+    .info-box {
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .info-box strong {
+      font-size: 18px;
+    }
+
+    @media (max-width: 800px) {
+      .panel {
+        grid-template-columns: 1fr;
+      }
+
+      #map {
+        height: 620px;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="panel">
+    <div class="card">
+      <label for="sectionSelect">Seleccionar sección</label>
+      <select id="sectionSelect">
+        <option value="">Cargando secciones...</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h1 id="sectionTitle">Mapa de secciones</h1>
+      <p id="sectionInfo">Selecciona una sección para ver municipio, distrito federal y distrito local.</p>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const map = L.map('map').setView([23.245, -106.41], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let geojsonLayer;
+    let selectedLayer = null;
+    const sectionSelect = document.getElementById('sectionSelect');
+    const sectionTitle = document.getElementById('sectionTitle');
+    const sectionInfo = document.getElementById('sectionInfo');
+
+    const defaultStyle = {
+      color: '#0f172a',
+      weight: 1,
+      fillColor: '#38bdf8',
+      fillOpacity: 0.28
+    };
+
+    const highlightStyle = {
+      color: '#991b1b',
+      weight: 3,
+      fillColor: '#ef4444',
+      fillOpacity: 0.55
+    };
+
+    function popupContent(props) {
+      return `
+        <div class="info-box">
+          <strong>Sección: ${props.seccion}</strong><br>
+          <b>Municipio:</b> ${props.municipio}<br>
+          <b>Distrito federal:</b> ${props.distrito_f}<br>
+          <b>Distrito local:</b> ${props.distrito_l}
+        </div>
+      `;
+    }
+
+    function updateInfo(props) {
+      sectionTitle.innerText = `Sección ${props.seccion}`;
+      sectionInfo.innerHTML = `
+        <b>Municipio:</b> ${props.municipio}<br>
+        <b>Distrito federal:</b> ${props.distrito_f}<br>
+        <b>Distrito local:</b> ${props.distrito_l}
+      `;
+    }
+
+    function selectSection(sectionNumber) {
+      if (!geojsonLayer) return;
+
+      geojsonLayer.eachLayer(layer => {
+        layer.setStyle(defaultStyle);
+
+        if (String(layer.feature.properties.seccion) === String(sectionNumber)) {
+          selectedLayer = layer;
+          layer.setStyle(highlightStyle);
+          layer.bringToFront();
+          map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+          layer.openPopup();
+          updateInfo(layer.feature.properties);
+        }
+      });
+    }
+
+    fetch('mazatlan_secciones_5pct_wgs84.geojson')
+      .then(response => response.json())
+      .then(data => {
+        geojsonLayer = L.geoJSON(data, {
+          style: defaultStyle,
+          onEachFeature: function(feature, layer) {
+            const props = feature.properties;
+
+            layer.bindPopup(popupContent(props));
+
+            layer.on('click', function() {
+              sectionSelect.value = props.seccion;
+              selectSection(props.seccion);
+            });
+          }
+        }).addTo(map);
+
+        map.fitBounds(geojsonLayer.getBounds());
+
+        const sections = data.features
+          .map(f => f.properties.seccion)
+          .filter(Boolean)
+          .sort((a, b) => a - b);
+
+        sectionSelect.innerHTML = '<option value="">Selecciona una sección</option>';
+
+        sections.forEach(section => {
+          const option = document.createElement('option');
+          option.value = section;
+          option.textContent = `Sección ${section}`;
+          sectionSelect.appendChild(option);
+        });
+
+        sectionSelect.addEventListener('change', function() {
+          if (this.value) {
+            selectSection(this.value);
+          }
+        });
+      })
+      .catch(error => {
+        sectionSelect.innerHTML = '<option>Error al cargar GeoJSON</option>';
+        sectionTitle.innerText = 'Error al cargar el mapa';
+        sectionInfo.innerText = 'Revisa que el archivo mazatlan_secciones_5pct_wgs84.geojson esté en el mismo repositorio.';
+        console.error(error);
+      });
+  </script>
+
+</body>
+</html>
