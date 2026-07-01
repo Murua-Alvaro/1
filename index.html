@@ -237,6 +237,8 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+const VERSION_CACHE = Date.now();
+
 const map = L.map("map").setView([23.24, -106.41], 11);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -296,6 +298,23 @@ function obtenerSeccionGeojson(props) {
 
 function num(v) {
   if (v === undefined || v === null || v === "") return null;
+
+  if (typeof v === "string") {
+    let limpio = v.trim();
+
+    if (limpio === "" || limpio.toLowerCase() === "nan") return null;
+
+    if (limpio.includes("%")) {
+      limpio = limpio.replace("%", "").replace(/,/g, "");
+      const n = Number(limpio);
+      return isNaN(n) ? null : n / 100;
+    }
+
+    limpio = limpio.replace(/,/g, "");
+    const n = Number(limpio);
+    return isNaN(n) ? null : n;
+  }
+
   const n = Number(v);
   return isNaN(n) ? null : n;
 }
@@ -321,6 +340,26 @@ function fmt(v, tipo) {
   }
 
   return String(v);
+}
+
+function porcentajeVotoGrupo(d, grupo) {
+  const campoPct = "Pct_Votos_" + grupo;
+  const campoVotos = "Votos_" + grupo;
+
+  let pct = num(d[campoPct]);
+
+  if (pct !== null) {
+    return pct;
+  }
+
+  const votosGrupo = num(d[campoVotos]);
+  const votantes = num(d.Votantes);
+
+  if (votosGrupo !== null && votantes !== null && votantes > 0) {
+    return votosGrupo / votantes;
+  }
+
+  return null;
 }
 
 function percentil(arr, p) {
@@ -433,11 +472,11 @@ function linea(nombre, valor) {
   return `<div class="row"><span>${nombre}</span><span>${valor}</span></div>`;
 }
 
-function pesoCard(grupo, valor) {
+function pesoCard(grupo, d) {
   return `
     <div class="peso-card">
       <div class="grupo">${grupo}</div>
-      <div class="valor">${fmt(num(valor), "porcentaje")}</div>
+      <div class="valor">${fmt(porcentajeVotoGrupo(d, grupo), "porcentaje")}</div>
     </div>
   `;
 }
@@ -480,12 +519,12 @@ function popupHTML(seccion, d) {
       <div class="popup-section">
         <b>Peso relativo del voto por grupo de edad</b>
         <div class="peso-voto-grid">
-          ${pesoCard("18-29", d["Pct_Votos_18-29"])}
-          ${pesoCard("30-39", d["Pct_Votos_30-39"])}
-          ${pesoCard("40-49", d["Pct_Votos_40-49"])}
-          ${pesoCard("50-59", d["Pct_Votos_50-59"])}
-          ${pesoCard("60-79", d["Pct_Votos_60-79"])}
-          ${pesoCard("80+", d["Pct_Votos_80+"])}
+          ${pesoCard("18-29", d)}
+          ${pesoCard("30-39", d)}
+          ${pesoCard("40-49", d)}
+          ${pesoCard("50-59", d)}
+          ${pesoCard("60-79", d)}
+          ${pesoCard("80+", d)}
         </div>
       </div>
 
@@ -666,8 +705,8 @@ document.getElementById("buscarSeccion").addEventListener("keyup", function(e) {
 });
 
 Promise.all([
-  fetch("./mazatlan_secciones_5pct_wgs84.geojson").then(r => r.json()),
-  fetch("./composicion_2024_indices.json").then(r => r.json())
+  fetch("./mazatlan_secciones_5pct_wgs84.geojson?v=" + VERSION_CACHE).then(r => r.json()),
+  fetch("./composicion_2024_indices.json?v=" + VERSION_CACHE).then(r => r.json())
 ])
 .then(([geojson, indices]) => {
   geojsonData = geojson;
@@ -676,6 +715,9 @@ Promise.all([
   indices.forEach(d => {
     datos[normalizarSeccion(d.SECCION)] = d;
   });
+
+  console.log("Columnas disponibles en JSON:", Object.keys(indices[0]));
+  console.log("Ejemplo primera sección:", indices[0]);
 
   actualizarMapa();
 
