@@ -3,244 +3,675 @@
 <head>
   <meta charset="UTF-8">
   <title>Mapa de Composición Electoral 2024 - Mazatlán</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
   <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --amber: #d97706;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background: #e5e7eb;
+      color: var(--text);
+      overflow: hidden;
     }
 
     #map {
       width: 100vw;
       height: 100vh;
+      background: #e5e7eb;
     }
 
-    #panel {
+    .topbar {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 1000;
-      background: white;
-      width: 340px;
-      padding: 14px;
-      border-radius: 12px;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.25);
-      max-height: 92vh;
-      overflow-y: auto;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 1200;
+      display: flex;
+      gap: 12px;
+      pointer-events: none;
     }
 
-    h2 {
-      margin: 0 0 6px 0;
-      font-size: 17px;
-      color: #111827;
+    .brand-card {
+      width: 390px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      pointer-events: auto;
+      backdrop-filter: blur(12px);
     }
 
-    .subtitulo {
+    .brand-header {
+      padding: 16px 18px 12px 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 58%, #2563eb 100%);
+      color: white;
+    }
+
+    .brand-header h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-header p {
+      margin: 6px 0 0 0;
       font-size: 12px;
-      color: #6b7280;
-      margin-bottom: 10px;
+      color: #dbeafe;
+      line-height: 1.35;
     }
 
-    label {
-      display: block;
-      margin-top: 9px;
-      font-size: 12px;
-      font-weight: bold;
-      color: #374151;
+    .control-body {
+      padding: 14px 16px 16px 16px;
     }
 
-    select, input {
+    .control-block {
+      margin-bottom: 12px;
+    }
+
+    .control-block label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .control-block label span {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    select,
+    input {
       width: 100%;
-      padding: 7px;
-      margin-top: 4px;
-      border: 1px solid #d1d5db;
-      border-radius: 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 11px;
+      background: white;
       font-size: 13px;
-      box-sizing: border-box;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.15s ease;
     }
 
-    #resumen {
+    select:focus,
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-light {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+
+    .summary-card {
       margin-top: 12px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      padding: 9px;
-      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
       font-size: 12px;
       line-height: 1.45;
-      color: #374151;
+      color: #334155;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-kpi {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 9px;
+    }
+
+    .mini-kpi .value {
+      font-size: 17px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.1;
+    }
+
+    .mini-kpi .label {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 800;
+    }
+
+    .tools-card {
+      flex: 1;
+      max-width: 520px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+      pointer-events: auto;
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: fit-content;
+    }
+
+    .tools-card .tool-search {
+      flex: 1;
+    }
+
+    .tools-card input {
+      height: 40px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      background: #2563eb;
+    }
+
+    .side-panel {
+      position: absolute;
+      right: 14px;
+      top: 88px;
+      z-index: 1100;
+      width: 360px;
+      max-height: calc(100vh - 110px);
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      display: none;
+    }
+
+    .side-panel.active {
+      display: block;
+    }
+
+    .section-detail-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .section-detail-header h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-detail-header p {
+      margin: 5px 0 0 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .close-btn {
+      float: right;
+      background: #e2e8f0;
+      color: #0f172a;
+      border-radius: 999px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      line-height: 28px;
+      text-align: center;
+      font-size: 15px;
+      box-shadow: none;
+    }
+
+    .detail-body {
+      padding: 14px 16px 16px 16px;
+    }
+
+    .detail-section {
+      margin-bottom: 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .detail-section-title {
+      padding: 9px 11px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #334155;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .detail-item {
+      padding: 10px 11px;
+      border-bottom: 1px solid #f1f5f9;
+      border-right: 1px solid #f1f5f9;
+      min-height: 56px;
+    }
+
+    .detail-item:nth-child(2n) {
+      border-right: 0;
+    }
+
+    .detail-item .label {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+
+    .detail-item .value {
+      font-size: 14px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    .recommendation {
+      padding: 11px;
+      font-size: 13px;
+      color: #0f172a;
+      line-height: 1.45;
+      background: #fff;
     }
 
     .legend {
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 1px 8px rgba(0,0,0,0.25);
+      background: rgba(255, 255, 255, 0.96);
+      padding: 12px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid #e2e8f0;
       font-size: 12px;
       line-height: 18px;
+      max-width: 255px;
     }
 
-    .legend span {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      margin-right: 6px;
-      border: 1px solid #777;
-      vertical-align: middle;
+    .legend-title {
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: #0f172a;
+      font-size: 12px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 4px 0;
+      color: #334155;
+    }
+
+    .legend-swatch {
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
+      border: 1px solid rgba(15, 23, 42, 0.25);
+      flex-shrink: 0;
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .leaflet-popup-content {
+      margin: 12px 14px;
+      min-width: 230px;
+    }
+
+    .popup-title {
+      font-size: 16px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .popup-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .popup-line b {
+      color: #0f172a;
+    }
+
+    .popup-actions {
+      margin-top: 10px;
+    }
+
+    .popup-actions button {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .range-note {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .leaflet-control-zoom a {
+      border-radius: 8px !important;
+      margin-bottom: 4px;
+      border: 1px solid #cbd5e1 !important;
+    }
+
+    @media (max-width: 920px) {
+      .topbar {
+        flex-direction: column;
+        right: auto;
+        width: calc(100vw - 28px);
+      }
+
+      .brand-card {
+        width: 100%;
+        max-height: 52vh;
+        overflow-y: auto;
+      }
+
+      .tools-card {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .side-panel {
+        left: 14px;
+        right: 14px;
+        top: auto;
+        bottom: 14px;
+        width: auto;
+        max-height: 55vh;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<div id="panel">
-  <h2>Composición electoral 2024</h2>
-  <div class="subtitulo">Mazatlán · Secciones electorales · Edad, participación e índices</div>
+<div id="map"></div>
 
-  <label>Ver mapa por</label>
-  <select id="variableMapa">
-    <option value="Indice_Oportunidad_0_100">Índice de oportunidad</option>
-    <option value="Participacion_Seccion">Participación de la sección</option>
-    <option value="No_Voto_Total">No voto total</option>
-    <option value="Potencial_Movilizacion_vs_Municipal">Potencial de movilización</option>
-    <option value="HHI_Grupos_Edad_0_100">HHI / concentración por edad</option>
-    <option value="Entropia_Grupos_Edad_0_100">Entropía / diversidad por edad</option>
-    <option value="Cramer_V_Grupos_Edad">Cramer V por edad</option>
-    <option value="Brecha_Max_Min_Participacion_Grupos">Brecha entre grupos de edad</option>
-    <option value="Indice_Segmentacion_Edad_0_100">Índice de segmentación por edad</option>
-    <option value="Indice_Dominancia_Grupo_0_100">Dominancia del grupo principal</option>
-  </select>
+<div class="topbar">
+  <div class="brand-card">
+    <div class="brand-header">
+      <h1>Composición electoral 2024 · Mazatlán</h1>
+      <p>Mapa de secciones electorales con oportunidad, concentración, segmentación y composición por edad.</p>
+    </div>
 
-  <label>Nivel de oportunidad</label>
-  <select id="filtroOportunidad">
-    <option value="">Todos</option>
-    <option value="Alta">Alta</option>
-    <option value="Media">Media</option>
-    <option value="Seguimiento">Seguimiento</option>
-    <option value="Baja">Baja</option>
-  </select>
+    <div class="control-body">
+      <div class="control-block">
+        <label>Color del mapa <span>variable visible</span></label>
+        <select id="variableMapa">
+          <option value="Indice_Oportunidad_0_100">Índice de oportunidad</option>
+          <option value="HHI_Grupos_Edad_0_100">HHI / concentración por edad</option>
+          <option value="Cramer_V_Grupos_Edad">Cramer V por edad</option>
+          <option value="Tipo_Composicion_Edad">Tipo de composición por edad</option>
+        </select>
+      </div>
 
-  <label>Tipo de composición por edad</label>
-  <select id="filtroComposicion">
-    <option value="">Todos</option>
-    <option value="Concentrada">Concentrada</option>
-    <option value="Media">Media</option>
-    <option value="Diversificada">Diversificada</option>
-  </select>
+      <div class="grid-2">
+        <div class="control-block">
+          <label>Oportunidad</label>
+          <select id="filtroOportunidad">
+            <option value="">Todas</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Seguimiento">Seguimiento</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
 
-  <label>Fuerza de diferencia por edad</label>
-  <select id="filtroFuerza">
-    <option value="">Todos</option>
-    <option value="Alta">Alta</option>
-    <option value="Media">Media</option>
-    <option value="Baja">Baja</option>
-    <option value="No evaluable">No evaluable</option>
-  </select>
+        <div class="control-block">
+          <label>Composición</label>
+          <select id="filtroComposicion">
+            <option value="">Todas</option>
+            <option value="Concentrada">Concentrada</option>
+            <option value="Media">Media</option>
+            <option value="Diversificada">Diversificada</option>
+          </select>
+        </div>
+      </div>
 
-  <label>Grupo dominante en votos</label>
-  <select id="filtroDominante">
-    <option value="">Todos</option>
-    <option value="18-29">18-29</option>
-    <option value="30-39">30-39</option>
-    <option value="40-49">40-49</option>
-    <option value="50-59">50-59</option>
-    <option value="60-79">60-79</option>
-    <option value="80+">80+</option>
-  </select>
+      <div class="grid-2">
+        <div class="control-block">
+          <label>HHI</label>
+          <select id="filtroHHI">
+            <option value="">Todos</option>
+            <option value="bajo">Bajo</option>
+            <option value="medio">Medio</option>
+            <option value="alto">Alto</option>
+          </select>
+          <div class="range-note">Se calcula por terciles dentro de tus secciones.</div>
+        </div>
 
-  <label>Grupo con mayor no voto</label>
-  <select id="filtroNoVoto">
-    <option value="">Todos</option>
-    <option value="18-29">18-29</option>
-    <option value="30-39">30-39</option>
-    <option value="40-49">40-49</option>
-    <option value="50-59">50-59</option>
-    <option value="60-79">60-79</option>
-    <option value="80+">80+</option>
-  </select>
+        <div class="control-block">
+          <label>Cramer V</label>
+          <select id="filtroCramer">
+            <option value="">Todos</option>
+            <option value="bajo">Bajo</option>
+            <option value="medio">Medio</option>
+            <option value="alto">Alto</option>
+          </select>
+          <div class="range-note">Se calcula por terciles dentro de tus secciones.</div>
+        </div>
+      </div>
 
-  <label>Universo operativo</label>
-  <select id="filtroUniverso">
-    <option value="">Todos</option>
-    <option value="Operativa">Operativa</option>
-    <option value="Pequeña / revisar con cuidado">Pequeña / revisar con cuidado</option>
-  </select>
+      <div class="button-row">
+        <button class="btn-light" onclick="limpiarFiltros()">Limpiar filtros</button>
+        <button class="btn-primary" onclick="enfocarVisibles()">Enfocar visibles</button>
+      </div>
 
-  <label>Buscar sección</label>
-  <input id="buscarSeccion" placeholder="Ej. 2618">
+      <div class="summary-card" id="resumen">
+        Cargando información...
+      </div>
+    </div>
+  </div>
 
-  <div id="resumen">Cargando información...</div>
+  <div class="tools-card">
+    <div class="tool-search">
+      <input id="buscarSeccion" placeholder="Buscar sección, ej. 2618">
+    </div>
+    <button class="btn-primary" onclick="buscarYEnfocar()">Buscar</button>
+    <div class="pill"><span class="dot"></span><span id="estadoCarga">Cargando</span></div>
+  </div>
 </div>
 
-<div id="map"></div>
+<div class="side-panel" id="panelDetalle">
+  <div class="section-detail-header">
+    <button class="close-btn" onclick="cerrarDetalle()">×</button>
+    <h2 id="detalleTitulo">Sección</h2>
+    <p id="detalleSubtitulo">Información electoral por sección</p>
+  </div>
+  <div class="detail-body" id="detalleContenido"></div>
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-const map = L.map("map").setView([23.24, -106.41], 11);
+const map = L.map("map", {
+  zoomControl: false
+}).setView([23.24, -106.41], 11);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+L.control.zoom({
+  position: "bottomleft"
+}).addTo(map);
+
+const mapaClaro = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "© OpenStreetMap"
-}).addTo(map);
+});
+
+const mapaLimpio = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  maxZoom: 20,
+  attribution: "© OpenStreetMap © CARTO"
+});
+
+const mapaOscuro = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  maxZoom: 20,
+  attribution: "© OpenStreetMap © CARTO"
+});
+
+mapaLimpio.addTo(map);
+
+L.control.layers({
+  "Mapa limpio": mapaLimpio,
+  "OpenStreetMap": mapaClaro,
+  "Mapa oscuro": mapaOscuro
+}, null, { position: "bottomleft" }).addTo(map);
 
 let geojsonData = null;
 let capa = null;
 let datos = {};
+let indicesArray = [];
 let legend = null;
+let boundsVisibles = [];
+let featureLayers = {};
 
-const configVariables = {
+const coloresContinuos = {
+  Indice_Oportunidad_0_100: ["#eff6ff", "#bfdbfe", "#60a5fa", "#2563eb", "#1e3a8a"],
+  HHI_Grupos_Edad_0_100: ["#ecfdf5", "#bbf7d0", "#4ade80", "#16a34a", "#14532d"],
+  Cramer_V_Grupos_Edad: ["#f9fafb", "#d1d5db", "#9ca3af", "#4b5563", "#111827"]
+};
+
+const coloresCategoria = {
+  "Concentrada": "#dc2626",
+  "Media": "#f59e0b",
+  "Diversificada": "#16a34a",
+  "Sin dato": "#cbd5e1"
+};
+
+const configVariable = {
   Indice_Oportunidad_0_100: {
     nombre: "Índice de oportunidad",
-    formato: "numero",
-    colores: ["#eff6ff", "#bfdbfe", "#60a5fa", "#2563eb", "#1e3a8a"]
-  },
-  Participacion_Seccion: {
-    nombre: "Participación de la sección",
-    formato: "porcentaje",
-    colores: ["#fee2e2", "#fecaca", "#f87171", "#dc2626", "#7f1d1d"]
-  },
-  No_Voto_Total: {
-    nombre: "No voto total",
-    formato: "entero",
-    colores: ["#fef9c3", "#fde68a", "#f59e0b", "#d97706", "#78350f"]
-  },
-  Potencial_Movilizacion_vs_Municipal: {
-    nombre: "Potencial de movilización",
-    formato: "entero",
-    colores: ["#f3e8ff", "#d8b4fe", "#a855f7", "#7e22ce", "#581c87"]
+    tipo: "numero",
+    descripcion: "Prioridad territorial combinando baja participación, no voto y tamaño."
   },
   HHI_Grupos_Edad_0_100: {
     nombre: "HHI / concentración por edad",
-    formato: "numero",
-    colores: ["#ecfdf5", "#bbf7d0", "#4ade80", "#16a34a", "#14532d"]
-  },
-  Entropia_Grupos_Edad_0_100: {
-    nombre: "Entropía / diversidad por edad",
-    formato: "numero",
-    colores: ["#f0fdfa", "#99f6e4", "#2dd4bf", "#0f766e", "#134e4a"]
+    tipo: "numero",
+    descripcion: "Concentración del voto por grupos de edad."
   },
   Cramer_V_Grupos_Edad: {
     nombre: "Cramer V por edad",
-    formato: "numero",
-    colores: ["#f9fafb", "#d1d5db", "#9ca3af", "#4b5563", "#111827"]
+    tipo: "numero",
+    descripcion: "Fuerza de diferencia de participación entre grupos de edad."
   },
-  Brecha_Max_Min_Participacion_Grupos: {
-    nombre: "Brecha entre grupos de edad",
-    formato: "porcentaje",
-    colores: ["#fefce8", "#fef08a", "#eab308", "#a16207", "#713f12"]
-  },
-  Indice_Segmentacion_Edad_0_100: {
-    nombre: "Índice de segmentación por edad",
-    formato: "numero",
-    colores: ["#eef2ff", "#c7d2fe", "#818cf8", "#4f46e5", "#312e81"]
-  },
-  Indice_Dominancia_Grupo_0_100: {
-    nombre: "Dominancia del grupo principal",
-    formato: "numero",
-    colores: ["#fff7ed", "#fed7aa", "#fb923c", "#ea580c", "#7c2d12"]
+  Tipo_Composicion_Edad: {
+    nombre: "Tipo de composición por edad",
+    tipo: "categoria",
+    descripcion: "Clasificación de la sección: concentrada, media o diversificada."
   }
 };
 
@@ -270,15 +701,18 @@ function obtenerSeccionGeojson(props) {
   return "";
 }
 
-function valor(d, campo) {
-  if (!d) return null;
-  const v = d[campo];
+function numero(v) {
   if (v === undefined || v === null || v === "") return null;
   const n = Number(v);
-  return isNaN(n) ? v : n;
+  return isNaN(n) ? null : n;
 }
 
-function formato(v, tipo) {
+function texto(v) {
+  if (v === undefined || v === null || v === "") return "Sin dato";
+  return String(v);
+}
+
+function formato(v, tipo = "numero") {
   if (v === undefined || v === null || v === "" || Number.isNaN(v)) return "Sin dato";
 
   if (tipo === "porcentaje") {
@@ -289,38 +723,72 @@ function formato(v, tipo) {
     return Math.round(Number(v)).toLocaleString("es-MX");
   }
 
-  if (typeof v === "number") {
+  if (tipo === "numero") {
     return Number(v).toFixed(2);
   }
 
-  return v;
+  return String(v);
 }
 
-function valoresVariable(variable) {
-  return Object.values(datos)
-    .map(d => Number(d[variable]))
-    .filter(v => !isNaN(v));
+function percentil(arr, p) {
+  const valores = arr.filter(v => v !== null && !isNaN(v)).sort((a, b) => a - b);
+  if (valores.length === 0) return null;
+  const pos = (valores.length - 1) * p;
+  const base = Math.floor(pos);
+  const resto = pos - base;
+  if (valores[base + 1] !== undefined) {
+    return valores[base] + resto * (valores[base + 1] - valores[base]);
+  }
+  return valores[base];
 }
 
-function colorPorValor(v, variable) {
-  if (v === null || v === undefined || isNaN(Number(v))) return "#d1d5db";
+function rangoTercil(valor, campo) {
+  const v = numero(valor);
+  if (v === null) return "sin";
 
-  const valores = valoresVariable(variable);
-  if (valores.length === 0) return "#d1d5db";
+  const valores = indicesArray.map(d => numero(d[campo])).filter(x => x !== null);
+  const p33 = percentil(valores, 0.3333);
+  const p66 = percentil(valores, 0.6666);
 
+  if (v <= p33) return "bajo";
+  if (v <= p66) return "medio";
+  return "alto";
+}
+
+function valoresCampo(campo) {
+  return indicesArray.map(d => numero(d[campo])).filter(v => v !== null);
+}
+
+function colorContinuo(valor, campo) {
+  const v = numero(valor);
+  if (v === null) return "#cbd5e1";
+
+  const valores = valoresCampo(campo);
   const min = Math.min(...valores);
   const max = Math.max(...valores);
+  const colores = coloresContinuos[campo];
 
-  if (max === min) return configVariables[variable].colores[2];
+  if (!colores || valores.length === 0) return "#cbd5e1";
+  if (min === max) return colores[2];
 
-  const t = (Number(v) - min) / (max - min);
-  const c = configVariables[variable].colores;
+  const t = (v - min) / (max - min);
 
-  if (t <= 0.20) return c[0];
-  if (t <= 0.40) return c[1];
-  if (t <= 0.60) return c[2];
-  if (t <= 0.80) return c[3];
-  return c[4];
+  if (t <= 0.20) return colores[0];
+  if (t <= 0.40) return colores[1];
+  if (t <= 0.60) return colores[2];
+  if (t <= 0.80) return colores[3];
+  return colores[4];
+}
+
+function colorFeature(d, variable) {
+  if (!d) return "#e2e8f0";
+
+  if (variable === "Tipo_Composicion_Edad") {
+    const cat = texto(d.Tipo_Composicion_Edad);
+    return coloresCategoria[cat] || coloresCategoria["Sin dato"];
+  }
+
+  return colorContinuo(d[variable], variable);
 }
 
 function pasaFiltros(d) {
@@ -328,19 +796,13 @@ function pasaFiltros(d) {
 
   const oportunidad = document.getElementById("filtroOportunidad").value;
   const composicion = document.getElementById("filtroComposicion").value;
-  const fuerza = document.getElementById("filtroFuerza").value;
-  const dominante = document.getElementById("filtroDominante").value;
-  const noVoto = document.getElementById("filtroNoVoto").value;
-  const universo = document.getElementById("filtroUniverso").value;
-  const buscar = document.getElementById("buscarSeccion").value.trim();
+  const hhi = document.getElementById("filtroHHI").value;
+  const cramer = document.getElementById("filtroCramer").value;
 
-  if (oportunidad && d.Nivel_Oportunidad !== oportunidad) return false;
-  if (composicion && d.Tipo_Composicion_Edad !== composicion) return false;
-  if (fuerza && d.Fuerza_Diferencia_Edad !== fuerza) return false;
-  if (dominante && d.Grupo_Dominante_Votos !== dominante) return false;
-  if (noVoto && d.Grupo_Mayor_No_Voto !== noVoto) return false;
-  if (universo && d.Universo_Operativo !== universo) return false;
-  if (buscar && normalizarSeccion(d.SECCION) !== buscar) return false;
+  if (oportunidad && texto(d.Nivel_Oportunidad) !== oportunidad) return false;
+  if (composicion && texto(d.Tipo_Composicion_Edad) !== composicion) return false;
+  if (hhi && rangoTercil(d.HHI_Grupos_Edad_0_100, "HHI_Grupos_Edad_0_100") !== hhi) return false;
+  if (cramer && rangoTercil(d.Cramer_V_Grupos_Edad, "Cramer_V_Grupos_Edad") !== cramer) return false;
 
   return true;
 }
@@ -352,66 +814,200 @@ function estilo(feature) {
 
   if (!pasaFiltros(d)) {
     return {
-      color: "#9ca3af",
-      weight: 0.5,
-      fillColor: "#e5e7eb",
-      fillOpacity: 0.08
+      color: "#94a3b8",
+      weight: 0.45,
+      fillColor: "#e2e8f0",
+      fillOpacity: 0.10
     };
   }
 
-  const v = valor(d, variable);
-
   return {
-    color: "#374151",
-    weight: 0.8,
-    fillColor: colorPorValor(v, variable),
+    color: "#0f172a",
+    weight: 0.75,
+    fillColor: colorFeature(d, variable),
     fillOpacity: 0.78
   };
 }
 
-function popup(feature) {
-  const seccion = obtenerSeccionGeojson(feature.properties);
-  const d = datos[seccion];
-
+function popupHTML(seccion, d) {
   if (!d) {
-    return `<b>Sección ${seccion}</b><br>Sin datos de composición electoral.`;
+    return `
+      <div class="popup-title">Sección ${seccion}</div>
+      <div>Sin datos de composición electoral.</div>
+    `;
   }
 
   return `
-    <div style="font-size:13px; min-width:270px; line-height:1.35;">
-      <b>Sección ${seccion}</b><br><br>
-
-      <b>Base electoral</b><br>
-      Lista nominal: ${formato(valor(d, "Lista_Nominal"), "entero")}<br>
-      Votantes: ${formato(valor(d, "Votantes"), "entero")}<br>
-      No voto total: ${formato(valor(d, "No_Voto_Total"), "entero")}<br>
-      Participación: ${formato(valor(d, "Participacion_Seccion"), "porcentaje")}<br><br>
-
-      <b>Oportunidad</b><br>
-      Índice: ${formato(valor(d, "Indice_Oportunidad_0_100"), "numero")}<br>
-      Nivel: ${d.Nivel_Oportunidad || "Sin dato"}<br>
-      Potencial movilización: ${formato(valor(d, "Potencial_Movilizacion_vs_Municipal"), "entero")}<br><br>
-
-      <b>Composición por edad</b><br>
-      Grupo dominante en votos: ${d.Grupo_Dominante_Votos || "Sin dato"}<br>
-      Grupo con mayor no voto: ${d.Grupo_Mayor_No_Voto || "Sin dato"}<br>
-      Grupo con mayor participación: ${d.Grupo_Mayor_Participacion || "Sin dato"}<br>
-      Grupo con menor participación: ${d.Grupo_Menor_Participacion || "Sin dato"}<br><br>
-
-      <b>Índices</b><br>
-      HHI edad: ${formato(valor(d, "HHI_Grupos_Edad_0_100"), "numero")}<br>
-      Entropía edad: ${formato(valor(d, "Entropia_Grupos_Edad_0_100"), "numero")}<br>
-      Cramer V edad: ${formato(valor(d, "Cramer_V_Grupos_Edad"), "numero")}<br>
-      Brecha edad: ${formato(valor(d, "Brecha_Max_Min_Participacion_Grupos"), "porcentaje")}<br><br>
-
-      <b>Lectura</b><br>
-      ${d.Recomendacion || "Sin recomendación"}
+    <div>
+      <div class="popup-title">Sección ${seccion}</div>
+      <div class="popup-line"><span>Oportunidad</span><b>${formato(numero(d.Indice_Oportunidad_0_100))}</b></div>
+      <div class="popup-line"><span>Participación</span><b>${formato(numero(d.Participacion_Seccion), "porcentaje")}</b></div>
+      <div class="popup-line"><span>No voto</span><b>${formato(numero(d.No_Voto_Total), "entero")}</b></div>
+      <div class="popup-line"><span>HHI</span><b>${formato(numero(d.HHI_Grupos_Edad_0_100))}</b></div>
+      <div class="popup-line"><span>Cramer V</span><b>${formato(numero(d.Cramer_V_Grupos_Edad))}</b></div>
+      <div class="popup-line"><span>Composición</span><b>${texto(d.Tipo_Composicion_Edad)}</b></div>
+      <div class="popup-actions">
+        <button onclick="abrirDetalle('${seccion}')">Ver ficha completa</button>
+      </div>
     </div>
   `;
 }
 
+function campoDisponible(d, campos) {
+  for (const c of campos) {
+    if (d && d[c] !== undefined && d[c] !== null && d[c] !== "") return d[c];
+  }
+  return null;
+}
+
+function item(label, valor, tipo = "texto", extraClass = "") {
+  const v = tipo === "texto" ? texto(valor) : formato(valor, tipo);
+  return `
+    <div class="detail-item ${extraClass}">
+      <div class="label">${label}</div>
+      <div class="value">${v}</div>
+    </div>
+  `;
+}
+
+function bloque(titulo, contenido) {
+  return `
+    <div class="detail-section">
+      <div class="detail-section-title">${titulo}</div>
+      <div class="detail-grid">
+        ${contenido}
+      </div>
+    </div>
+  `;
+}
+
+function abrirDetalle(seccion) {
+  const d = datos[seccion];
+  if (!d) return;
+
+  document.getElementById("panelDetalle").classList.add("active");
+  document.getElementById("detalleTitulo").innerText = `Sección ${seccion}`;
+  document.getElementById("detalleSubtitulo").innerText = `${texto(d.Nivel_Oportunidad)} oportunidad · ${texto(d.Tipo_Composicion_Edad)} · ${texto(d.Universo_Operativo)}`;
+
+  const sexoDominante = campoDisponible(d, [
+    "Sexo_Dominante_Votos",
+    "SEXO_Dominante_Votos",
+    "Sexo_Dominante",
+    "Segmento_Dominante_Sexo",
+    "Sexo_Mayor_Voto"
+  ]);
+
+  const segmentoDominante = campoDisponible(d, [
+    "Segmento_Dominante_Votos",
+    "Segmento_Dominante",
+    "Segmento_Dominante_Edad_Sexo"
+  ]);
+
+  const segmentoNoVoto = campoDisponible(d, [
+    "Segmento_Mayor_No_Voto",
+    "Segmento_No_Voto_Dominante",
+    "Segmento_Mayor_Abstencion"
+  ]);
+
+  const brechaSexo = campoDisponible(d, [
+    "Brecha_Participacion_Mujer_Hombre",
+    "Brecha_Mujer_Hombre",
+    "Brecha_Sexo"
+  ]);
+
+  const participacionMujer = campoDisponible(d, [
+    "Participacion_Mujer",
+    "Participacion_Sexo_0",
+    "Participacion_Femenina"
+  ]);
+
+  const participacionHombre = campoDisponible(d, [
+    "Participacion_Hombre",
+    "Participacion_Sexo_1",
+    "Participacion_Masculina"
+  ]);
+
+  const html = `
+    ${bloque("Base electoral", 
+      item("Lista nominal", numero(d.Lista_Nominal), "entero") +
+      item("Votantes", numero(d.Votantes), "entero") +
+      item("No voto total", numero(d.No_Voto_Total), "entero") +
+      item("Participación", numero(d.Participacion_Seccion), "porcentaje") +
+      item("Abstención", numero(d.Abstencion_Seccion), "porcentaje") +
+      item("NS / sin clasificación", numero(d.NS_Pct), "porcentaje")
+    )}
+
+    ${bloque("Oportunidad territorial",
+      item("Índice de oportunidad", numero(d.Indice_Oportunidad_0_100), "numero") +
+      item("Nivel", d.Nivel_Oportunidad, "texto") +
+      item("Potencial de movilización", numero(d.Potencial_Movilizacion_vs_Municipal), "entero") +
+      item("Brecha vs municipal", numero(d.Brecha_Participacion_vs_Municipal), "porcentaje") +
+      item("Votos esperados", numero(d.Votos_Esperados_a_Participacion_Municipal), "entero") +
+      item("Universo operativo", d.Universo_Operativo, "texto")
+    )}
+
+    ${bloque("Composición por edad",
+      item("Grupo dominante en votos", d.Grupo_Dominante_Votos, "texto") +
+      item("Votos grupo dominante", numero(d.Votos_Grupo_Dominante), "entero") +
+      item("Peso del grupo dominante", numero(d.Pct_Votos_Grupo_Dominante), "porcentaje") +
+      item("Participación grupo dominante", numero(d.Participacion_Grupo_Dominante), "porcentaje") +
+      item("Grupo con mayor no voto", d.Grupo_Mayor_No_Voto, "texto") +
+      item("No voto del grupo mayor", numero(d.No_Voto_Grupo_Mayor), "entero") +
+      item("Grupo mayor participación", d.Grupo_Mayor_Participacion, "texto") +
+      item("Grupo menor participación", d.Grupo_Menor_Participacion, "texto")
+    )}
+
+    ${bloque("Índices de concentración y segmentación",
+      item("HHI edad", numero(d.HHI_Grupos_Edad_0_100), "numero") +
+      item("Entropía edad", numero(d.Entropia_Grupos_Edad_0_100), "numero") +
+      item("Número efectivo de grupos", numero(d.Numero_Efectivo_Grupos), "numero") +
+      item("Grupos activos", numero(d.Grupos_Activos), "entero") +
+      item("Cramer V edad", numero(d.Cramer_V_Grupos_Edad), "numero") +
+      item("Fuerza diferencia edad", d.Fuerza_Diferencia_Edad, "texto") +
+      item("Brecha edad max-min", numero(d.Brecha_Max_Min_Participacion_Grupos), "porcentaje") +
+      item("P-value edad", numero(d.P_value_Grupos_Edad), "numero")
+    )}
+
+    ${bloque("Sexo y segmentos sexo-edad",
+      item("Sexo dominante", sexoDominante, "texto") +
+      item("Segmento dominante", segmentoDominante, "texto") +
+      item("Segmento con mayor no voto", segmentoNoVoto, "texto") +
+      item("Brecha mujer-hombre", numero(brechaSexo), "porcentaje") +
+      item("Participación mujer", numero(participacionMujer), "porcentaje") +
+      item("Participación hombre", numero(participacionHombre), "porcentaje")
+    )}
+
+    ${bloque("Índices compuestos",
+      item("Segmentación edad", numero(d.Indice_Segmentacion_Edad_0_100), "numero") +
+      item("Concentración edad", numero(d.Indice_Concentracion_Edad_0_100), "numero") +
+      item("Diversidad edad", numero(d.Indice_Diversidad_Edad_0_100), "numero") +
+      item("Dominancia grupo", numero(d.Indice_Dominancia_Grupo_0_100), "numero")
+    )}
+
+    <div class="detail-section">
+      <div class="detail-section-title">Lectura operativa</div>
+      <div class="recommendation">${texto(d.Recomendacion)}</div>
+    </div>
+  `;
+
+  document.getElementById("detalleContenido").innerHTML = html;
+
+  if (featureLayers[seccion]) {
+    map.fitBounds(featureLayers[seccion].getBounds(), { padding: [60, 60], maxZoom: 15 });
+    featureLayers[seccion].setStyle({ weight: 3, color: "#0f172a" });
+  }
+}
+
+function cerrarDetalle() {
+  document.getElementById("panelDetalle").classList.remove("active");
+  actualizarMapa();
+}
+
 function actualizarMapa() {
   if (!geojsonData) return;
+
+  boundsVisibles = [];
+  featureLayers = {};
 
   if (capa) {
     map.removeLayer(capa);
@@ -420,17 +1016,30 @@ function actualizarMapa() {
   capa = L.geoJSON(geojsonData, {
     style: estilo,
     onEachFeature: function(feature, layer) {
-      layer.bindPopup(popup(feature));
+      const seccion = obtenerSeccionGeojson(feature.properties);
+      const d = datos[seccion];
+
+      featureLayers[seccion] = layer;
+      layer.bindPopup(popupHTML(seccion, d));
+
+      if (pasaFiltros(d)) {
+        boundsVisibles.push(layer.getBounds());
+      }
 
       layer.on("mouseover", function() {
         layer.setStyle({
-          weight: 2,
-          color: "#111827"
+          weight: 2.4,
+          color: "#020617",
+          fillOpacity: 0.9
         });
       });
 
       layer.on("mouseout", function() {
         capa.resetStyle(layer);
+      });
+
+      layer.on("click", function() {
+        if (d) abrirDetalle(seccion);
       });
     }
   }).addTo(map);
@@ -445,35 +1054,66 @@ function actualizarResumen() {
   let ln = 0;
   let votos = 0;
   let noVoto = 0;
+  let potencial = 0;
+  let oportunidadProm = [];
 
   Object.values(datos).forEach(d => {
     total += 1;
 
     if (pasaFiltros(d)) {
       visibles += 1;
-      ln += Number(d.Lista_Nominal || 0);
-      votos += Number(d.Votantes || 0);
-      noVoto += Number(d.No_Voto_Total || 0);
+      ln += numero(d.Lista_Nominal) || 0;
+      votos += numero(d.Votantes) || 0;
+      noVoto += numero(d.No_Voto_Total) || 0;
+      potencial += numero(d.Potencial_Movilizacion_vs_Municipal) || 0;
+
+      const op = numero(d.Indice_Oportunidad_0_100);
+      if (op !== null) oportunidadProm.push(op);
     }
   });
 
   const participacion = ln > 0 ? votos / ln : null;
+  const opProm = oportunidadProm.length > 0
+    ? oportunidadProm.reduce((a, b) => a + b, 0) / oportunidadProm.length
+    : null;
+
   const variable = document.getElementById("variableMapa").value;
+  const cfg = configVariable[variable];
 
   document.getElementById("resumen").innerHTML = `
-    <b>Variable activa:</b> ${configVariables[variable].nombre}<br>
-    <b>Secciones visibles:</b> ${visibles} de ${total}<br>
-    <b>Lista nominal visible:</b> ${ln.toLocaleString("es-MX")}<br>
-    <b>Votantes visibles:</b> ${votos.toLocaleString("es-MX")}<br>
-    <b>No voto visible:</b> ${noVoto.toLocaleString("es-MX")}<br>
-    <b>Participación visible:</b> ${participacion === null ? "Sin dato" : (participacion * 100).toFixed(2) + "%"}
+    <b>Variable activa:</b> ${cfg.nombre}<br>
+    <span style="color:#64748b;">${cfg.descripcion}</span>
+
+    <div class="summary-grid">
+      <div class="mini-kpi">
+        <div class="value">${visibles.toLocaleString("es-MX")}</div>
+        <div class="label">Secciones visibles</div>
+      </div>
+      <div class="mini-kpi">
+        <div class="value">${formato(participacion, "porcentaje")}</div>
+        <div class="label">Participación visible</div>
+      </div>
+      <div class="mini-kpi">
+        <div class="value">${noVoto.toLocaleString("es-MX")}</div>
+        <div class="label">No voto visible</div>
+      </div>
+      <div class="mini-kpi">
+        <div class="value">${formato(opProm, "numero")}</div>
+        <div class="label">Oportunidad promedio</div>
+      </div>
+    </div>
+
+    <div style="margin-top:9px;">
+      <b>Lista nominal visible:</b> ${ln.toLocaleString("es-MX")}<br>
+      <b>Votantes visibles:</b> ${votos.toLocaleString("es-MX")}<br>
+      <b>Potencial visible:</b> ${potencial.toLocaleString("es-MX")}
+    </div>
   `;
 }
 
 function actualizarLeyenda() {
   const variable = document.getElementById("variableMapa").value;
-  const cfg = configVariables[variable];
-  const valores = valoresVariable(variable);
+  const cfg = configVariable[variable];
 
   if (legend) {
     map.removeControl(legend);
@@ -484,24 +1124,39 @@ function actualizarLeyenda() {
   legend.onAdd = function() {
     const div = L.DomUtil.create("div", "legend");
 
+    div.innerHTML = `<div class="legend-title">${cfg.nombre}</div>`;
+
+    if (cfg.tipo === "categoria") {
+      Object.keys(coloresCategoria).forEach(k => {
+        div.innerHTML += `
+          <div class="legend-row">
+            <span class="legend-swatch" style="background:${coloresCategoria[k]}"></span>
+            <span>${k}</span>
+          </div>
+        `;
+      });
+      return div;
+    }
+
+    const valores = valoresCampo(variable);
     if (valores.length === 0) {
-      div.innerHTML = "<b>Sin datos</b>";
+      div.innerHTML += "Sin datos";
       return div;
     }
 
     const min = Math.min(...valores);
     const max = Math.max(...valores);
-    const colores = cfg.colores;
-
-    div.innerHTML = `<b>${cfg.nombre}</b><br>`;
+    const colores = coloresContinuos[variable];
 
     for (let i = 0; i < 5; i++) {
       const a = min + (max - min) * (i / 5);
       const b = min + (max - min) * ((i + 1) / 5);
 
       div.innerHTML += `
-        <span style="background:${colores[i]}"></span>
-        ${formato(a, cfg.formato)} - ${formato(b, cfg.formato)}<br>
+        <div class="legend-row">
+          <span class="legend-swatch" style="background:${colores[i]}"></span>
+          <span>${formato(a, "numero")} - ${formato(b, "numero")}</span>
+        </div>
       `;
     }
 
@@ -511,12 +1166,55 @@ function actualizarLeyenda() {
   legend.addTo(map);
 }
 
+function limpiarFiltros() {
+  document.getElementById("filtroOportunidad").value = "";
+  document.getElementById("filtroComposicion").value = "";
+  document.getElementById("filtroHHI").value = "";
+  document.getElementById("filtroCramer").value = "";
+  document.getElementById("buscarSeccion").value = "";
+  cerrarDetalle();
+  actualizarMapa();
+}
+
+function enfocarVisibles() {
+  if (boundsVisibles.length === 0) return;
+
+  let group = L.featureGroup();
+
+  boundsVisibles.forEach(b => {
+    const rect = L.rectangle(b);
+    group.addLayer(rect);
+  });
+
+  map.fitBounds(group.getBounds(), { padding: [60, 60] });
+}
+
+function buscarYEnfocar() {
+  const seccion = normalizarSeccion(document.getElementById("buscarSeccion").value);
+
+  if (!seccion) return;
+
+  if (featureLayers[seccion]) {
+    abrirDetalle(seccion);
+    featureLayers[seccion].openPopup();
+  } else {
+    alert("No encontré esa sección en el mapa.");
+  }
+}
+
 Promise.all([
-  fetch("./mazatlan_secciones_5pct_wgs84.geojson").then(r => r.json()),
-  fetch("./composicion_2024_indices.json").then(r => r.json())
+  fetch("./mazatlan_secciones_5pct_wgs84.geojson").then(r => {
+    if (!r.ok) throw new Error("No se pudo cargar el GeoJSON.");
+    return r.json();
+  }),
+  fetch("./composicion_2024_indices.json").then(r => {
+    if (!r.ok) throw new Error("No se pudo cargar el JSON de composición.");
+    return r.json();
+  })
 ])
 .then(([geojson, indices]) => {
   geojsonData = geojson;
+  indicesArray = indices;
 
   indices.forEach(d => {
     datos[normalizarSeccion(d.SECCION)] = d;
@@ -525,15 +1223,18 @@ Promise.all([
   actualizarMapa();
 
   const bounds = L.geoJSON(geojsonData).getBounds();
-  map.fitBounds(bounds);
+  map.fitBounds(bounds, { padding: [30, 30] });
+
+  document.getElementById("estadoCarga").innerText = "Listo";
 })
 .catch(error => {
   console.error(error);
+  document.getElementById("estadoCarga").innerText = "Error";
   document.getElementById("resumen").innerHTML = `
     <b>Error cargando archivos.</b><br>
     Revisa que estén en la misma carpeta:<br>
-    composicion_2024_indices.json<br>
-    mazatlan_secciones_5pct_wgs84.geojson
+    <b>mazatlan_secciones_5pct_wgs84.geojson</b><br>
+    <b>composicion_2024_indices.json</b>
   `;
 });
 
@@ -541,14 +1242,14 @@ Promise.all([
   "variableMapa",
   "filtroOportunidad",
   "filtroComposicion",
-  "filtroFuerza",
-  "filtroDominante",
-  "filtroNoVoto",
-  "filtroUniverso",
-  "buscarSeccion"
+  "filtroHHI",
+  "filtroCramer"
 ].forEach(id => {
   document.getElementById(id).addEventListener("change", actualizarMapa);
-  document.getElementById(id).addEventListener("keyup", actualizarMapa);
+});
+
+document.getElementById("buscarSeccion").addEventListener("keyup", function(e) {
+  if (e.key === "Enter") buscarYEnfocar();
 });
 </script>
 
