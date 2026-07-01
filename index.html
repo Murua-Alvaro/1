@@ -1,1907 +1,518 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Territorio Electoral | Mazatlán</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    :root{
-      --bg:#f6f7fb;
-      --panel:#ffffff;
-      --ink:#111827;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --soft:#f3f4f6;
-      --purple:#7c3aed;
-      --purple2:#6d28d9;
-      --purpleSoft:#ede9fe;
-      --blue:#2563eb;
-      --green:#16a34a;
-      --orange:#f59e0b;
-      --red:#ef4444;
-      --dark:#101827;
-      --dark2:#172033;
-      --shadow:0 12px 30px rgba(15,23,42,.12);
-      --shadow2:0 8px 18px rgba(15,23,42,.10);
-    }
-
-    *{box-sizing:border-box}
-
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--ink);
-    }
-
-    .app{
-      width:100vw;
-      height:100vh;
-      display:grid;
-      grid-template-columns:320px minmax(520px,1fr) 430px;
-      grid-template-rows:76px 1fr;
-      background:var(--bg);
-    }
-
-    .sidebar{
-      grid-row:1/3;
-      grid-column:1;
-      background:linear-gradient(180deg,#0e172b 0%,#121b31 48%,#0d1628 100%);
-      color:white;
-      padding:20px 22px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      box-shadow:8px 0 24px rgba(15,23,42,.18);
-      z-index:30;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:13px;
-      padding-bottom:18px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-    }
-
-    .brandMark{
-      width:40px;
-      height:40px;
-      border-radius:12px;
-      background:linear-gradient(135deg,#4f46e5,#9333ea,#ec4899);
-      display:grid;
-      place-items:center;
-      box-shadow:0 12px 25px rgba(124,58,237,.35);
-    }
-
-    .brandBars{
-      display:flex;
-      align-items:flex-end;
-      gap:3px;
-      height:24px;
-    }
-
-    .brandBars span{
-      width:5px;
-      border-radius:4px;
-      background:rgba(255,255,255,.85);
-    }
-
-    .brandBars span:nth-child(1){height:9px;opacity:.55}
-    .brandBars span:nth-child(2){height:15px;opacity:.70}
-    .brandBars span:nth-child(3){height:21px;opacity:.88}
-    .brandBars span:nth-child(4){height:13px;opacity:.65}
-
-    .brand h1{
-      margin:0;
-      font-size:19px;
-      line-height:1.05;
-      font-weight:800;
-      letter-spacing:-.02em;
-    }
-
-    .brand p{
-      margin:4px 0 0;
-      color:#c7d2fe;
-      font-size:12px;
-      font-weight:500;
-    }
-
-    .sideHeader{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:2px;
-    }
-
-    .sideHeader h2{
-      margin:0;
-      font-size:15px;
-      font-weight:800;
-    }
-
-    .clearBtn{
-      border:0;
-      background:transparent;
-      color:#c4b5fd;
-      font-size:12px;
-      font-weight:700;
-      cursor:pointer;
-    }
-
-    .filterGroup{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-
-    .filterLabel{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      color:#e5e7eb;
-      font-size:12px;
-      font-weight:700;
-    }
-
-    .infoDot{
-      width:15px;
-      height:15px;
-      border-radius:50%;
-      display:inline-grid;
-      place-items:center;
-      color:#cbd5e1;
-      border:1px solid rgba(255,255,255,.25);
-      font-size:10px;
-    }
-
-    select,.sideInput,.topSearch{
-      width:100%;
-      height:38px;
-      border:1px solid rgba(255,255,255,.13);
-      border-radius:9px;
-      background:#182237;
-      color:white;
-      padding:0 12px;
-      outline:none;
-      font-size:13px;
-      font-weight:600;
-    }
-
-    select:focus,.sideInput:focus{
-      border-color:#a78bfa;
-      box-shadow:0 0 0 3px rgba(124,58,237,.22);
-    }
-
-    .sideInput::placeholder{color:#9ca3af}
-
-    .quickPanel,.legendPanel{
-      border-top:1px solid rgba(255,255,255,.10);
-      padding-top:14px;
-    }
-
-    .panelTitle{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      color:#f9fafb;
-      font-size:13px;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
-    .toggleRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      height:27px;
-      color:#e5e7eb;
-      font-size:13px;
-    }
-
-    .switch{
-      width:34px;
-      height:19px;
-      border-radius:999px;
-      background:#4b5563;
-      position:relative;
-      cursor:pointer;
-      transition:.2s;
-    }
-
-    .switch::after{
-      content:"";
-      width:15px;
-      height:15px;
-      border-radius:50%;
-      background:white;
-      position:absolute;
-      top:2px;
-      left:2px;
-      transition:.2s;
-      box-shadow:0 2px 6px rgba(0,0,0,.2);
-    }
-
-    .switch.on{background:var(--purple)}
-    .switch.on::after{left:17px}
-
-    .legendTitle{
-      color:#f9fafb;
-      font-size:13px;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
-    .legendRamp{
-      height:22px;
-      border-radius:6px;
-      overflow:hidden;
-      display:grid;
-      grid-template-columns:repeat(6,1fr);
-      border:1px solid rgba(255,255,255,.18);
-    }
-
-    .legendRamp span:nth-child(1){background:#fca5a5}
-    .legendRamp span:nth-child(2){background:#fdba74}
-    .legendRamp span:nth-child(3){background:#fde68a}
-    .legendRamp span:nth-child(4){background:#bbf7d0}
-    .legendRamp span:nth-child(5){background:#86efac}
-    .legendRamp span:nth-child(6){background:#4ade80}
-
-    .legendBins{
-      display:grid;
-      grid-template-columns:repeat(6,1fr);
-      gap:2px;
-      color:#d1d5db;
-      font-size:10.5px;
-      margin-top:7px;
-    }
-
-    .legendExtra{
-      display:flex;
-      flex-direction:column;
-      gap:9px;
-      margin-top:17px;
-      color:#d1d5db;
-      font-size:12px;
-    }
-
-    .legendItem{
-      display:flex;
-      align-items:center;
-      gap:9px;
-    }
-
-    .hatch{
-      width:30px;
-      height:14px;
-      border-radius:4px;
-      background:repeating-linear-gradient(135deg,rgba(255,255,255,.18) 0 5px,rgba(255,255,255,.06) 5px 10px);
-      border:1px solid rgba(255,255,255,.18);
-    }
-
-    .lineSym{
-      width:30px;
-      height:2px;
-      background:#e5e7eb;
-    }
-
-    .topbar{
-      grid-column:2/4;
-      grid-row:1;
-      background:rgba(255,255,255,.92);
-      backdrop-filter:blur(14px);
-      border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      gap:18px;
-      padding:0 22px;
-      z-index:20;
-    }
-
-    .location{
-      display:flex;
-      align-items:center;
-      gap:11px;
-      min-width:220px;
-    }
-
-    .pin{
-      width:34px;
-      height:34px;
-      border-radius:11px;
-      background:var(--purpleSoft);
-      color:var(--purple);
-      display:grid;
-      place-items:center;
-      font-size:18px;
-      font-weight:900;
-    }
-
-    .location h2{
-      margin:0;
-      font-size:18px;
-      font-weight:850;
-      letter-spacing:-.02em;
-    }
-
-    .location p{
-      margin:2px 0 0;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:600;
-    }
-
-    .searchWrap{
-      flex:1;
-      max-width:520px;
-      position:relative;
-      margin-left:auto;
-    }
-
-    .topSearch{
-      height:42px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--ink);
-      padding-left:40px;
-      box-shadow:0 3px 10px rgba(15,23,42,.04);
-    }
-
-    .searchIcon{
-      position:absolute;
-      left:14px;
-      top:50%;
-      transform:translateY(-50%);
-      color:#64748b;
-      font-size:16px;
-    }
-
-    .topActions{
-      display:flex;
-      align-items:center;
-      gap:11px;
-    }
-
-    .topBtn{
-      height:40px;
-      padding:0 14px;
-      border-radius:10px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:#111827;
-      font-size:13px;
-      font-weight:750;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      cursor:pointer;
-      box-shadow:0 3px 10px rgba(15,23,42,.04);
-    }
-
-    .iconBtn{
-      width:38px;
-      height:38px;
-      border-radius:50%;
-      border:1px solid var(--line);
-      background:#fff;
-      display:grid;
-      place-items:center;
-      cursor:pointer;
-      position:relative;
-      font-size:17px;
-    }
-
-    .badge{
-      position:absolute;
-      top:-4px;
-      right:-3px;
-      width:17px;
-      height:17px;
-      border-radius:50%;
-      background:#ef4444;
-      color:white;
-      font-size:10px;
-      font-weight:800;
-      display:grid;
-      place-items:center;
-    }
-
-    .avatar{
-      width:38px;
-      height:38px;
-      border-radius:50%;
-      background:#111827;
-      color:white;
-      display:grid;
-      place-items:center;
-      font-size:13px;
-      font-weight:850;
-    }
-
-    .mapWrap{
-      grid-column:2;
-      grid-row:2;
-      position:relative;
-      overflow:hidden;
-    }
-
-    #map{
-      width:100%;
-      height:100%;
-      background:#eef2f7;
-    }
-
-    .leaflet-control-attribution{
-      font-size:10px!important;
-      color:#64748b!important;
-      background:rgba(255,255,255,.75)!important;
-    }
-
-    .leaflet-container{
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    }
-
-    .mapChip{
-      position:absolute;
-      top:18px;
-      left:18px;
-      z-index:15;
-      height:34px;
-      border-radius:10px;
-      background:rgba(255,255,255,.92);
-      border:1px solid var(--line);
-      box-shadow:var(--shadow2);
-      display:flex;
-      align-items:center;
-      gap:9px;
-      padding:0 11px;
-      color:#334155;
-      font-size:13px;
-      font-weight:700;
-      backdrop-filter:blur(10px);
-    }
-
-    .mapChip strong{color:#111827}
-
-    .mapTools{
-      position:absolute;
-      right:18px;
-      top:18px;
-      z-index:15;
-      display:flex;
-      flex-direction:column;
-      gap:9px;
-    }
-
-    .toolSquare{
-      width:42px;
-      height:42px;
-      border-radius:10px;
-      background:rgba(255,255,255,.94);
-      border:1px solid var(--line);
-      box-shadow:var(--shadow2);
-      display:grid;
-      place-items:center;
-      cursor:pointer;
-      font-size:18px;
-      font-weight:900;
-      color:#111827;
-      backdrop-filter:blur(10px);
-    }
-
-    .scaleBox{
-      position:absolute;
-      bottom:22px;
-      left:22px;
-      z-index:15;
-      background:rgba(255,255,255,.88);
-      border:1px solid var(--line);
-      border-radius:10px;
-      padding:10px 12px;
-      box-shadow:var(--shadow2);
-      backdrop-filter:blur(10px);
-    }
-
-    .scaleLine{
-      width:190px;
-      height:8px;
-      border-left:2px solid #334155;
-      border-right:2px solid #334155;
-      border-bottom:2px solid #334155;
-    }
-
-    .scaleNums{
-      display:flex;
-      justify-content:space-between;
-      font-size:11px;
-      color:#334155;
-      margin-bottom:3px;
-      font-weight:700;
-    }
-
-    .sectionLabel{
-      font-size:12px;
-      font-weight:800;
-      color:#1f2937;
-      text-shadow:0 1px 2px rgba(255,255,255,.95),0 -1px 2px rgba(255,255,255,.95),1px 0 2px rgba(255,255,255,.95),-1px 0 2px rgba(255,255,255,.95);
-      pointer-events:none;
-      opacity:.92;
-    }
-
-    .sectionLabel.selected{
-      background:var(--purple);
-      color:white;
-      padding:4px 8px;
-      border-radius:7px;
-      box-shadow:0 8px 18px rgba(124,58,237,.35);
-      text-shadow:none;
-      font-size:13px;
-    }
-
-    .rightPanel{
-      grid-column:3;
-      grid-row:2;
-      background:#fff;
-      border-left:1px solid var(--line);
-      overflow:auto;
-      z-index:18;
-      padding:20px 22px;
-      box-shadow:-8px 0 24px rgba(15,23,42,.08);
-    }
-
-    .panelTop{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:16px;
-    }
-
-    .panelTitleBlock h2{
-      margin:0;
-      font-size:21px;
-      font-weight:900;
-      letter-spacing:-.025em;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .pill{
-      display:inline-flex;
-      height:23px;
-      align-items:center;
-      padding:0 9px;
-      border-radius:999px;
-      background:var(--purpleSoft);
-      color:var(--purple);
-      font-size:11px;
-      font-weight:850;
-      letter-spacing:.01em;
-    }
-
-    .panelTitleBlock p{
-      margin:5px 0 0;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:650;
-    }
-
-    .panelIcons{
-      display:flex;
-      gap:8px;
-      color:#64748b;
-      font-size:20px;
-    }
-
-    .panelIcon{
-      width:30px;
-      height:30px;
-      border-radius:9px;
-      display:grid;
-      place-items:center;
-      cursor:pointer;
-    }
-
-    .panelIcon:hover{background:#f1f5f9}
-
-    .card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:13px;
-      box-shadow:0 3px 12px rgba(15,23,42,.045);
-    }
-
-    .chartCard{
-      padding:14px 14px 12px;
-      margin-bottom:14px;
-    }
-
-    .chartTitle{
-      font-size:13px;
-      font-weight:850;
-      margin:0 0 12px;
-      color:#111827;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-    }
-
-    .barChart{
-      height:168px;
-      display:grid;
-      grid-template-columns:34px 1fr;
-      gap:10px;
-    }
-
-    .yAxis{
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      align-items:flex-end;
-      color:#64748b;
-      font-size:11px;
-      font-weight:700;
-      padding:0 0 24px;
-    }
-
-    .bars{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:9px;
-      border-left:1px solid #e5e7eb;
-      border-bottom:1px solid #e5e7eb;
-      padding:10px 10px 0;
-      position:relative;
-    }
-
-    .barItem{
-      flex:1;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-end;
-      gap:6px;
-      min-width:0;
-    }
-
-    .barVal{
-      color:#4b5563;
-      font-size:10.5px;
-      font-weight:850;
-      white-space:nowrap;
-    }
-
-    .bar{
-      width:72%;
-      max-width:38px;
-      min-height:3px;
-      border-radius:7px 7px 2px 2px;
-      background:linear-gradient(180deg,#8b5cf6,#6d28d9);
-      box-shadow:0 8px 15px rgba(124,58,237,.22);
-      transition:.25s;
-    }
-
-    .barLabel{
-      height:18px;
-      color:#64748b;
-      font-size:10.5px;
-      font-weight:800;
-      white-space:nowrap;
-    }
-
-    .rankCard{
-      padding:13px 14px;
-      margin-bottom:14px;
-    }
-
-    .rankTitle{
-      margin:0 0 10px;
-      font-size:12px;
-      font-weight:900;
-      color:#111827;
-    }
-
-    .rankList{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .rankRow{
-      display:grid;
-      grid-template-columns:22px 1fr auto;
-      align-items:center;
-      gap:8px;
-      color:#334155;
-      font-size:12px;
-      font-weight:700;
-    }
-
-    .rankNum{
-      width:18px;
-      height:18px;
-      border-radius:50%;
-      background:var(--purple);
-      color:white;
-      display:grid;
-      place-items:center;
-      font-size:10px;
-      font-weight:900;
-    }
-
-    .rankVal{
-      color:#111827;
-      font-weight:900;
-    }
-
-    .metricGrid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-bottom:14px;
-    }
-
-    .metricCard{
-      padding:13px 12px;
-      min-height:86px;
-    }
-
-    .metricHead{
-      display:flex;
-      align-items:center;
-      gap:7px;
-      color:#374151;
-      font-size:11.5px;
-      font-weight:850;
-      margin-bottom:8px;
-    }
-
-    .metricIcon{
-      width:21px;
-      height:21px;
-      border-radius:7px;
-      display:grid;
-      place-items:center;
-      font-size:12px;
-      font-weight:900;
-      background:#f3f4f6;
-      color:#64748b;
-    }
-
-    .metricValue{
-      font-size:20px;
-      font-weight:950;
-      color:#111827;
-      letter-spacing:-.025em;
-      line-height:1;
-      margin-bottom:5px;
-    }
-
-    .metricSub{
-      font-size:11px;
-      color:#64748b;
-      font-weight:650;
-      line-height:1.25;
-    }
-
-    .insightBox{
-      padding:15px;
-      background:#f8fbff;
-      border:1px solid #bfdbfe;
-      border-radius:13px;
-      color:#1e293b;
-      position:relative;
-      margin-bottom:16px;
-    }
-
-    .insightBox h3{
-      margin:0 0 8px;
-      font-size:13px;
-      font-weight:950;
-    }
-
-    .insightBox p{
-      margin:0;
-      color:#334155;
-      font-size:12.5px;
-      font-weight:550;
-      line-height:1.48;
-    }
-
-    .bolt{
-      position:absolute;
-      right:13px;
-      top:13px;
-      width:24px;
-      height:24px;
-      border-radius:50%;
-      border:1px solid #bfdbfe;
-      color:#2563eb;
-      display:grid;
-      place-items:center;
-      font-size:13px;
-      font-weight:900;
-      background:white;
-    }
-
-    .emptyState{
-      height:100%;
-      display:grid;
-      place-items:center;
-      color:#64748b;
-      text-align:center;
-      padding:50px;
-    }
-
-    .emptyState h3{
-      margin:0 0 8px;
-      color:#111827;
-    }
-
-    .loading{
-      position:absolute;
-      inset:0;
-      display:grid;
-      place-items:center;
-      background:rgba(246,247,251,.82);
-      z-index:80;
-      backdrop-filter:blur(6px);
-    }
-
-    .loadingCard{
-      background:white;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:22px 26px;
-      box-shadow:var(--shadow);
-      font-size:14px;
-      font-weight:850;
-      color:#111827;
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .spinner{
-      width:22px;
-      height:22px;
-      border-radius:50%;
-      border:3px solid #ddd6fe;
-      border-top-color:var(--purple);
-      animation:spin .8s linear infinite;
-    }
-
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    @media(max-width:1280px){
-      .app{grid-template-columns:290px minmax(440px,1fr) 395px}
-      .metricGrid{grid-template-columns:repeat(2,1fr)}
-      .topActions .topBtn span{display:none}
-      .location{min-width:185px}
-    }
-
-    @media(max-width:980px){
-      .app{
-        grid-template-columns:1fr;
-        grid-template-rows:64px 1fr 380px;
-      }
-      .sidebar{display:none}
-      .topbar{grid-column:1;grid-row:1}
-      .mapWrap{grid-column:1;grid-row:2}
-      .rightPanel{grid-column:1;grid-row:3;border-left:0;border-top:1px solid var(--line)}
-      .location p{display:none}
-      .topActions{display:none}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Territorio Electoral | Mazatlán</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+--dark:#0e1728;--dark2:#121d33;--panel:#fff;--bg:#f5f7fb;--line:#e5e7eb;--txt:#111827;--muted:#667085;--purple:#7c3aed;--purple2:#6d28d9;--soft:#f3f0ff;--green:#16a34a;--orange:#f59e0b;--red:#ef4444;--blue:#2563eb;--shadow:0 12px 30px rgba(15,23,42,.12)
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--txt)}
+.app{height:100vh;width:100vw;display:grid;grid-template-columns:315px minmax(550px,1fr) 430px;grid-template-rows:76px 1fr}
+.sidebar{grid-column:1;grid-row:1/3;background:linear-gradient(180deg,#0b1222,#111b31);color:white;padding:20px 20px 18px;z-index:50;box-shadow:8px 0 22px rgba(15,23,42,.22);overflow:auto}
+.brand{display:flex;gap:12px;align-items:center;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#5b5ff0,#8b5cf6,#ec4899);display:grid;place-items:center;box-shadow:0 10px 24px rgba(124,58,237,.35)}
+.logo span{display:block;width:4px;border-radius:5px;background:white;margin:0 2px}
+.logo div{display:flex;align-items:flex-end;height:24px}
+.logo span:nth-child(1){height:9px;opacity:.6}.logo span:nth-child(2){height:15px;opacity:.75}.logo span:nth-child(3){height:22px}.logo span:nth-child(4){height:12px;opacity:.7}
+.brand h1{font-size:18px;line-height:1;margin:0;font-weight:900;letter-spacing:-.02em}
+.brand p{font-size:12px;color:#c7d2fe;margin:4px 0 0;font-weight:600}
+.sideTop{display:flex;justify-content:space-between;align-items:center;margin:18px 0 16px}
+.sideTop h2{font-size:15px;margin:0;font-weight:900}
+.sideTop button{background:none;border:0;color:#c4b5fd;font-size:12px;font-weight:800;cursor:pointer}
+.fg{margin-bottom:14px}
+.fg label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#e5e7eb;margin-bottom:7px}
+.info{width:15px;height:15px;border-radius:50%;border:1px solid rgba(255,255,255,.28);display:inline-grid;place-items:center;font-size:10px;color:#cbd5e1}
+select,input{width:100%;height:38px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:#172239;color:white;padding:0 12px;font-size:13px;font-weight:700;outline:none}
+input::placeholder{color:#9ca3af}
+.divider{border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:16px}
+.sectionTitle{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:900;margin-bottom:10px}
+.toggleRow{display:flex;justify-content:space-between;align-items:center;height:28px;font-size:13px;color:#e5e7eb}
+.sw{width:34px;height:19px;border-radius:999px;background:#4b5563;position:relative;cursor:pointer}
+.sw:after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s}
+.sw.on{background:var(--purple)}.sw.on:after{left:17px}
+.ramp{height:22px;border-radius:6px;overflow:hidden;display:grid;grid-template-columns:repeat(6,1fr);border:1px solid rgba(255,255,255,.18)}
+.ramp span:nth-child(1){background:#fee2e2}.ramp span:nth-child(2){background:#fecaca}.ramp span:nth-child(3){background:#fed7aa}.ramp span:nth-child(4){background:#fde68a}.ramp span:nth-child(5){background:#bbf7d0}.ramp span:nth-child(6){background:#86efac}
+.bins{display:grid;grid-template-columns:repeat(6,1fr);font-size:10px;color:#d1d5db;margin-top:7px}
+.topbar{grid-column:2/4;grid-row:1;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 22px;z-index:40}
+.loc{display:flex;align-items:center;gap:11px;min-width:220px}
+.pin{width:34px;height:34px;border-radius:11px;background:var(--soft);color:var(--purple);display:grid;place-items:center;font-weight:900}
+.loc h2{margin:0;font-size:18px;font-weight:950;letter-spacing:-.02em}.loc p{margin:2px 0 0;font-size:12px;color:var(--muted);font-weight:650}
+.search{flex:1;max-width:540px;margin-left:auto;position:relative}
+.search input{height:42px;background:#fff;color:#111827;border:1px solid var(--line);padding-left:38px;box-shadow:0 3px 10px rgba(15,23,42,.04)}
+.search b{position:absolute;left:14px;top:10px;color:#64748b;font-size:15px}
+.topBtn{height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:850;display:flex;align-items:center;gap:8px;cursor:pointer}
+.avatar{width:38px;height:38px;border-radius:50%;background:#111827;color:white;display:grid;place-items:center;font-size:13px;font-weight:900}
+.mapWrap{grid-column:2;grid-row:2;position:relative}
+#map{width:100%;height:100%;background:#edf2f7}
+.leaflet-control-attribution{font-size:10px!important;background:rgba(255,255,255,.72)!important}
+.chip{position:absolute;top:17px;left:17px;z-index:25;background:rgba(255,255,255,.93);border:1px solid var(--line);height:34px;border-radius:10px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:750;box-shadow:0 8px 18px rgba(15,23,42,.09)}
+.tools{position:absolute;right:17px;top:17px;z-index:25;display:flex;flex-direction:column;gap:9px}
+.tool{width:42px;height:42px;border:1px solid var(--line);background:rgba(255,255,255,.95);border-radius:10px;display:grid;place-items:center;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 8px 18px rgba(15,23,42,.08)}
+.secLabel{font-size:12px;font-weight:900;color:#1f2937;text-shadow:0 1px 2px white,0 -1px 2px white,1px 0 2px white,-1px 0 2px white;pointer-events:none}
+.secLabel.sel{background:var(--purple);color:white;padding:4px 8px;border-radius:7px;text-shadow:none;box-shadow:0 8px 18px rgba(124,58,237,.35)}
+.panel{grid-column:3;grid-row:2;background:#fff;border-left:1px solid var(--line);z-index:35;padding:20px 22px;overflow:auto;box-shadow:-8px 0 22px rgba(15,23,42,.07)}
+.panelHead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px}
+.panel h2{margin:0;font-size:21px;font-weight:950;letter-spacing:-.025em}
+.panel small{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:650}
+.pill{display:inline-flex;align-items:center;height:23px;padding:0 9px;border-radius:999px;background:var(--soft);color:var(--purple);font-size:11px;font-weight:900;margin-left:7px}
+.close{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:22px;color:#64748b;cursor:pointer}
+.close:hover{background:#f1f5f9}
+.card{background:white;border:1px solid var(--line);border-radius:13px;box-shadow:0 3px 12px rgba(15,23,42,.045)}
+.chartCard{padding:14px;margin-bottom:14px}
+.chartTitle{margin:0 0 12px;font-size:13px;font-weight:950}
+.barChart{height:170px;display:grid;grid-template-columns:35px 1fr;gap:10px}
+.yaxis{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;color:#64748b;font-size:11px;font-weight:800;padding-bottom:24px}
+.bars{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;border-left:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:10px 9px 0}
+.barItem{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
+.barVal{font-size:10.5px;font-weight:900;color:#4b5563}.bar{width:70%;max-width:38px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#8b5cf6,#6d28d9);min-height:3px}.barLab{height:18px;font-size:10.5px;color:#64748b;font-weight:850;white-space:nowrap}
+.rank{padding:13px 14px;margin-bottom:14px}.rank h3{margin:0 0 10px;font-size:12px;font-weight:950}
+.rankRow{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;font-size:12px;font-weight:750;color:#334155;margin:7px 0}.rankNum{width:18px;height:18px;border-radius:50%;background:var(--purple);color:white;display:grid;place-items:center;font-size:10px;font-weight:950}.rankVal{font-weight:950;color:#111827}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.metric{padding:13px 12px;min-height:86px}.metric h4{margin:0 0 8px;font-size:11.5px;font-weight:950;color:#374151;display:flex;align-items:center;gap:7px}.ico{width:21px;height:21px;border-radius:7px;background:#f3f4f6;display:grid;place-items:center;color:#64748b;font-size:12px}.metric b{display:block;font-size:20px;line-height:1;font-weight:950;letter-spacing:-.03em}.metric p{margin:6px 0 0;font-size:11px;color:#64748b;line-height:1.25;font-weight:650}
+.read{padding:15px;background:#f8fbff;border:1px solid #bfdbfe;border-radius:13px;position:relative}.read h3{margin:0 0 8px;font-size:13px;font-weight:950}.read p{margin:0;font-size:12.5px;line-height:1.5;color:#334155;font-weight:550}.bolt{position:absolute;right:13px;top:13px;width:24px;height:24px;border-radius:50%;border:1px solid #bfdbfe;background:white;color:#2563eb;display:grid;place-items:center;font-weight:950}
+.empty{height:100%;display:grid;place-items:center;text-align:center;color:#667085;padding:35px}.empty h3{margin:0 0 8px;color:#111827}
+.loading{position:absolute;inset:0;background:rgba(246,247,251,.76);z-index:100;display:grid;place-items:center;backdrop-filter:blur(5px)}
+.loadCard{background:white;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 26px;font-weight:900}
+@media(max-width:1200px){.app{grid-template-columns:280px 1fr 390px}.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
-
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brandMark">
-          <div class="brandBars"><span></span><span></span><span></span><span></span></div>
-        </div>
-        <div>
-          <h1>Territorio Electoral</h1>
-          <p>Análisis y estrategia</p>
-        </div>
-      </div>
-
-      <div class="sideHeader">
-        <h2>Filtros</h2>
-        <button class="clearBtn" id="clearFilters">Limpiar todo ↻</button>
-      </div>
-
-      <div class="filterGroup">
-        <div class="filterLabel">Indicador <span class="infoDot">i</span></div>
-        <select id="indicatorSelect">
-          <option value="participacion">Participación</option>
-          <option value="no_voto">No voto</option>
-          <option value="oportunidad">Índice de oportunidad</option>
-          <option value="brecha_edad">Brecha de edad</option>
-          <option value="hhi">HHI</option>
-          <option value="cramer">Cramér V</option>
-        </select>
-      </div>
-
-      <div class="filterGroup">
-        <div class="filterLabel">Distrito <span class="infoDot">i</span></div>
-        <select id="districtSelect">
-          <option value="all">Todos</option>
-        </select>
-      </div>
-
-      <div class="filterGroup">
-        <div class="filterLabel">Zona <span class="infoDot">i</span></div>
-        <select id="zoneSelect">
-          <option value="all">Todas</option>
-        </select>
-      </div>
-
-      <div class="filterGroup">
-        <div class="filterLabel">Sección <span class="infoDot">i</span></div>
-        <input class="sideInput" id="sectionSearch" list="sectionOptions" placeholder="Buscar sección..." />
-        <datalist id="sectionOptions"></datalist>
-      </div>
-
-      <div class="filterGroup">
-        <div class="filterLabel">Composición <span class="infoDot">i</span></div>
-        <select id="compositionSelect">
-          <option value="all">Todas</option>
-        </select>
-      </div>
-
-      <div class="filterGroup">
-        <div class="filterLabel">Dominancia <span class="infoDot">i</span></div>
-        <select id="dominanceSelect">
-          <option value="all">Todas</option>
-          <option value="Baja">Baja</option>
-          <option value="Media">Media</option>
-          <option value="Alta">Alta</option>
-        </select>
-      </div>
-
-      <div class="quickPanel">
-        <div class="panelTitle">Controles rápidos <span>⌃</span></div>
-        <div class="toggleRow">Secciones <div class="switch on" id="toggleSections"></div></div>
-        <div class="toggleRow">Etiquetas <div class="switch on" id="toggleLabels"></div></div>
-        <div class="toggleRow">Límites distritales <div class="switch" id="toggleDistricts"></div></div>
-        <div class="toggleRow">Puntos de interés <div class="switch on" id="togglePOI"></div></div>
-        <div class="toggleRow">Transporte público <div class="switch" id="toggleTransit"></div></div>
-      </div>
-
-      <div class="legendPanel">
-        <div class="panelTitle">Leyenda <span>⌃</span></div>
-        <div class="legendTitle" id="legendMetricTitle">Participación (%)</div>
-        <div class="legendRamp"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        <div class="legendBins" id="legendBins">
-          <span>0 - 30</span><span>30 - 40</span><span>40 - 50</span><span>50 - 60</span><span>60 - 70</span><span>70+</span>
-        </div>
-        <div class="legendExtra">
-          <div class="legendItem"><span class="hatch"></span> Sin datos</div>
-          <div class="legendItem"><span class="lineSym"></span> Límite de sección</div>
-        </div>
-      </div>
-    </aside>
-
-    <header class="topbar">
-      <div class="location">
-        <div class="pin">⌖</div>
-        <div>
-          <h2>Mazatlán, Sinaloa</h2>
-          <p>Secciones electorales</p>
-        </div>
-      </div>
-
-      <div class="searchWrap">
-        <span class="searchIcon">⌕</span>
-        <input class="topSearch" id="topSearch" placeholder="Buscar dirección o sección..." />
-      </div>
-
-      <div class="topActions">
-        <button class="topBtn" id="compareBtn">⚖ <span>Comparar secciones</span></button>
-        <button class="topBtn" id="exportBtn">⇩ <span>Exportar</span></button>
-        <button class="iconBtn">🔔<span class="badge">3</span></button>
-        <button class="iconBtn">?</button>
-        <div class="avatar">AM</div>
-      </div>
-    </header>
-
-    <main class="mapWrap">
-      <div id="map"></div>
-
-      <div class="mapChip">
-        Vista: <strong id="mapChipMetric">Participación</strong> ▾ <span class="infoDot" style="color:#64748b;border-color:#cbd5e1">i</span>
-      </div>
-
-      <div class="mapTools">
-        <button class="toolSquare" id="layerBtn">▧</button>
-        <button class="toolSquare" id="fitBtn">⛶</button>
-        <button class="toolSquare" id="zoomInBtn">+</button>
-        <button class="toolSquare" id="zoomOutBtn">−</button>
-        <button class="toolSquare" id="locateBtn">➤</button>
-      </div>
-
-      <div class="scaleBox">
-        <div class="scaleNums"><span>0</span><span>250</span><span>500</span><span>750 m</span></div>
-        <div class="scaleLine"></div>
-      </div>
-
-      <div class="loading" id="loading">
-        <div class="loadingCard"><div class="spinner"></div> Cargando mapa electoral...</div>
-      </div>
-    </main>
-
-    <section class="rightPanel" id="rightPanel">
-      <div class="emptyState">
-        <div>
-          <h3>Selecciona una sección</h3>
-          <p>Haz clic en el mapa o busca una sección para ver su perfil electoral.</p>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    const CONFIG = {
-      geojsonUrl: "secciones_mazatlan.geojson",
-      dataUrl: "datos_mazatlan.csv",
-      center: [23.2459, -106.4111],
-      zoom: 12
-    };
-
-    const state = {
-      map:null,
-      geoLayer:null,
-      labelLayer:L.layerGroup(),
-      features:null,
-      rows:[],
-      metrics:new Map(),
-      selected:null,
-      indicator:"participacion",
-      district:"all",
-      zone:"all",
-      composition:"all",
-      dominance:"all",
-      showSections:true,
-      showLabels:true,
-      showDistricts:false,
-      showPOI:true,
-      showTransit:false,
-      bounds:null,
-      latestYear:null
-    };
-
-    const metricNames = {
-      participacion:"Participación",
-      no_voto:"No voto",
-      oportunidad:"Índice de oportunidad",
-      brecha_edad:"Brecha de edad",
-      hhi:"HHI",
-      cramer:"Cramér V"
-    };
-
-    const ageGroups = [
-      {label:"18–24", min:18, max:24},
-      {label:"25–34", min:25, max:34},
-      {label:"35–44", min:35, max:44},
-      {label:"45–54", min:45, max:54},
-      {label:"55–64", min:55, max:64},
-      {label:"65+", min:65, max:200}
-    ];
-
-    function normKey(v){
-      return String(v ?? "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-z0-9]/g,"");
-    }
-
-    function rowGetter(row){
-      const map = {};
-      Object.keys(row).forEach(k => map[normKey(k)] = k);
-      return (...keys) => {
-        for(const k of keys){
-          const nk = normKey(k);
-          if(map[nk] !== undefined) return row[map[nk]];
-        }
-        return "";
-      };
-    }
-
-    function propGetter(obj){
-      const props = obj?.properties || obj || {};
-      const map = {};
-      Object.keys(props).forEach(k => map[normKey(k)] = k);
-      return (...keys) => {
-        for(const k of keys){
-          const nk = normKey(k);
-          if(map[nk] !== undefined) return props[map[nk]];
-        }
-        return "";
-      };
-    }
-
-    function cleanSection(v){
-      if(v === null || v === undefined) return "";
-      const s = String(v).trim();
-      const m = s.match(/\d+/);
-      return m ? String(parseInt(m[0],10)) : s;
-    }
-
-    function cleanText(v){
-      const s = String(v ?? "").trim();
-      return s || "Sin dato";
-    }
-
-    function n(v){
-      if(v === null || v === undefined || v === "") return 0;
-      const x = Number(String(v).replace(/,/g,"").replace(/\s/g,""));
-      return Number.isFinite(x) ? x : 0;
-    }
-
-    function pct(v,dec=1){
-      if(!Number.isFinite(v)) return "—";
-      return `${(v*100).toFixed(dec)}%`;
-    }
-
-    function pp(v,dec=1){
-      if(!Number.isFinite(v)) return "—";
-      return `${(v*100).toFixed(dec)} pp`;
-    }
-
-    function numFmt(v){
-      return new Intl.NumberFormat("es-MX").format(Math.round(v || 0));
-    }
-
-    function clamp(v,min=0,max=1){
-      return Math.max(min,Math.min(max,v));
-    }
-
-    function getAgeGroup(age){
-      const g = ageGroups.find(x => age >= x.min && age <= x.max);
-      return g ? g.label : "Sin edad";
-    }
-
-    function getFeatureSection(feature){
-      const g = propGetter(feature);
-      return cleanSection(g("SECCION","SECCIÓN","CVE_SECC","SECC","ID_SECCION","seccion","section"));
-    }
-
-    function getFeatureDistrict(feature){
-      const g = propGetter(feature);
-      const v = g("DISTRITO","DISTRITO_LOCAL","DISTRITO FEDERAL","DEF","DEL","DTTO","district");
-      return v === "" ? "Sin dato" : String(v).trim().padStart(2,"0");
-    }
-
-    function getFeatureZone(feature){
-      const g = propGetter(feature);
-      const v = g("ZONA","ZONA_ELECTORAL","zona","zone");
-      return v === "" ? "Sin dato" : String(v).trim();
-    }
-
-    function getMetricValue(m,indicator=state.indicator){
-      if(!m) return null;
-      if(indicator === "participacion") return m.participacion;
-      if(indicator === "no_voto") return m.noVoto;
-      if(indicator === "oportunidad") return m.oportunidad;
-      if(indicator === "brecha_edad") return m.brechaEdad;
-      if(indicator === "hhi") return m.hhi;
-      if(indicator === "cramer") return m.cramer;
-      return m.participacion;
-    }
-
-    function colorFor(value,indicator=state.indicator){
-      if(value === null || value === undefined || !Number.isFinite(value)) return "#cbd5e1";
-      if(indicator === "brecha_edad" || indicator === "hhi" || indicator === "cramer"){
-        if(value < .15) return "#bbf7d0";
-        if(value < .25) return "#86efac";
-        if(value < .35) return "#fde68a";
-        if(value < .50) return "#fdba74";
-        return "#fca5a5";
-      }
-      if(value < .30) return "#fca5a5";
-      if(value < .40) return "#fdba74";
-      if(value < .50) return "#fde68a";
-      if(value < .60) return "#bbf7d0";
-      if(value < .70) return "#86efac";
-      return "#4ade80";
-    }
-
-    function calcCramer(ageStats){
-      const table = ageStats.filter(d => d.ln > 0).map(d => [d.sv, d.nv]);
-      const r = table.length;
-      const c = 2;
-      const total = table.flat().reduce((a,b)=>a+b,0);
-      if(total <= 0 || r < 2) return 0;
-      const rowTotals = table.map(row => row[0] + row[1]);
-      const colTotals = [d3.sum(table,d=>d[0]), d3.sum(table,d=>d[1])];
-      let chi2 = 0;
-      table.forEach((row,i)=>{
-        row.forEach((obs,j)=>{
-          const exp = rowTotals[i] * colTotals[j] / total;
-          if(exp > 0) chi2 += Math.pow(obs - exp,2) / exp;
-        });
-      });
-      return Math.sqrt(chi2 / (total * Math.min(r - 1, c - 1)));
-    }
-
-    function buildMetrics(rows){
-      const years = rows.map(r => {
-        const g = rowGetter(r);
-        return n(g("AELEC","AÑO","ANIO","YEAR"));
-      }).filter(Boolean);
-      state.latestYear = years.length ? d3.max(years) : null;
-      const activeRows = state.latestYear ? rows.filter(r => {
-        const g = rowGetter(r);
-        return n(g("AELEC","AÑO","ANIO","YEAR")) === state.latestYear;
-      }) : rows;
-
-      const groups = new Map();
-
-      activeRows.forEach(row => {
-        const g = rowGetter(row);
-        const sec = cleanSection(g("SECCION","SECCIÓN","CVE_SECC","SECC","ID_SECCION","section"));
-        if(!sec) return;
-
-        if(!groups.has(sec)){
-          const district = cleanText(g("DISTRITO","DISTRITO_LOCAL","DEF","DEL","DTTO")).padStart(2,"0");
-          const zone = cleanText(g("ZONA","ZONA_ELECTORAL","zone"));
-          const tipoSec = cleanText(g("TIPOSEC","TIPO_SECCION","tipo"));
-          groups.set(sec,{
-            seccion:sec,
-            distrito:district,
-            zona:zone,
-            tipoSec,
-            ln:0,
-            sv:0,
-            nv:0,
-            ns:0,
-            byAge:new Map()
-          });
-        }
-
-        const item = groups.get(sec);
-        const age = n(g("EDAD","AGE"));
-        const ag = getAgeGroup(age);
-        const ln = n(g("LN","LISTA_NOMINAL","LISTA NOMINAL"));
-        const sv = n(g("SV","SI_VOTO","VOTO","VOTANTES"));
-        const nv = n(g("NV","NO_VOTO","NO VOTO","ABSTENCION"));
-        const ns = n(g("NS","NO_SABE","SIN_DATO"));
-
-        item.ln += ln;
-        item.sv += sv;
-        item.nv += nv;
-        item.ns += ns;
-
-        if(!item.byAge.has(ag)) item.byAge.set(ag,{label:ag,ln:0,sv:0,nv:0,ns:0});
-        const a = item.byAge.get(ag);
-        a.ln += ln;
-        a.sv += sv;
-        a.nv += nv;
-        a.ns += ns;
-      });
-
-      const metrics = new Map();
-
-      groups.forEach(item => {
-        const ageStats = ageGroups.map(g => {
-          const d = item.byAge.get(g.label) || {label:g.label,ln:0,sv:0,nv:0,ns:0};
-          return {
-            ...d,
-            participacion:d.ln > 0 ? d.sv / d.ln : 0,
-            noVoto:d.ln > 0 ? d.nv / d.ln : 0,
-            share:item.ln > 0 ? d.ln / item.ln : 0
-          };
-        });
-
-        const validAge = ageStats.filter(d => d.ln > 0);
-        const participacion = item.ln > 0 ? item.sv / item.ln : 0;
-        const noVoto = item.ln > 0 ? item.nv / item.ln : 0;
-        const maxAge = validAge.length ? d3.max(validAge,d=>d.participacion) : 0;
-        const minAge = validAge.length ? d3.min(validAge,d=>d.participacion) : 0;
-        const brechaEdad = maxAge - minAge;
-        const hhi = ageStats.reduce((acc,d)=>acc + d.share*d.share,0);
-        const cramer = calcCramer(ageStats);
-        const dom = validAge.length ? validAge.slice().sort((a,b)=>b.ln-a.ln)[0] : {label:"Sin dato",share:0};
-        const oportunidad = clamp(noVoto*.52 + brechaEdad*.32 + (1-hhi)*.16);
-
-        let composicion = "Mixta";
-        if(dom.label === "18–24" || dom.label === "25–34") composicion = hhi < .30 ? "Joven balanceada" : "Joven dominante";
-        else if(dom.label === "35–44" || dom.label === "45–54") composicion = hhi < .30 ? "Adulta balanceada" : "Adulta dominante";
-        else if(dom.label === "55–64" || dom.label === "65+") composicion = hhi < .30 ? "Mayor balanceada" : "Mayor dominante";
-        if(hhi < .24) composicion = "Mixta balanceada";
-
-        const dominancia = hhi >= .36 ? "Alta" : hhi >= .28 ? "Media" : "Baja";
-
-        metrics.set(item.seccion,{
-          ...item,
-          participacion,
-          noVoto,
-          brechaEdad,
-          hhi,
-          cramer,
-          oportunidad,
-          grupoDominante:dom.label,
-          grupoShare:dom.share,
-          composicion,
-          dominancia,
-          ageStats,
-          distritoProm:0
-        });
-      });
-
-      const districtAgg = new Map();
-      metrics.forEach(m => {
-        const key = m.distrito || "Sin dato";
-        if(!districtAgg.has(key)) districtAgg.set(key,{ln:0,sv:0});
-        districtAgg.get(key).ln += m.ln;
-        districtAgg.get(key).sv += m.sv;
-      });
-
-      metrics.forEach(m => {
-        const d = districtAgg.get(m.distrito);
-        m.distritoProm = d && d.ln > 0 ? d.sv / d.ln : 0;
-      });
-
-      state.metrics = metrics;
-    }
-
-    function enrichMetricsWithGeo(){
-      if(!state.features) return;
-      state.features.features.forEach(f => {
-        const sec = getFeatureSection(f);
-        if(!sec) return;
-        const m = state.metrics.get(sec);
-        if(m){
-          const fd = getFeatureDistrict(f);
-          const fz = getFeatureZone(f);
-          if(m.distrito === "Sin dato" && fd !== "Sin dato") m.distrito = fd;
-          if(m.zona === "Sin dato" && fz !== "Sin dato") m.zona = fz;
-        }
-      });
-    }
-
-    function passFilters(feature){
-      const sec = getFeatureSection(feature);
-      const m = state.metrics.get(sec);
-      if(!m) return true;
-
-      const fd = m.distrito || getFeatureDistrict(feature);
-      const fz = m.zona || getFeatureZone(feature);
-
-      if(state.district !== "all" && fd !== state.district) return false;
-      if(state.zone !== "all" && fz !== state.zone) return false;
-      if(state.composition !== "all" && m.composicion !== state.composition) return false;
-      if(state.dominance !== "all" && m.dominancia !== state.dominance) return false;
-
-      return true;
-    }
-
-    function featureStyle(feature){
-      const sec = getFeatureSection(feature);
-      const m = state.metrics.get(sec);
-      const active = passFilters(feature);
-      const selected = state.selected && sec === state.selected;
-      const val = getMetricValue(m);
-      const fill = m ? colorFor(val) : "#cbd5e1";
-
-      if(!state.showSections){
-        return {fillOpacity:0,opacity:0,weight:0};
-      }
-
-      return {
-        fillColor:fill,
-        fillOpacity:active ? (selected ? .30 : .22) : .045,
-        color:selected ? "#7c3aed" : active ? "rgba(255,255,255,.92)" : "rgba(148,163,184,.35)",
-        weight:selected ? 2.7 : active ? .8 : .45,
-        opacity:selected ? 1 : active ? .92 : .40,
-        dashArray:null
-      };
-    }
-
-    function initMap(){
-      state.map = L.map("map",{
-        center:CONFIG.center,
-        zoom:CONFIG.zoom,
-        zoomControl:false,
-        preferCanvas:true
-      });
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-        maxZoom:19,
-        attribution:"© OpenStreetMap",
-        opacity:.94
-      }).addTo(state.map);
-
-      state.labelLayer.addTo(state.map);
-
-      document.getElementById("zoomInBtn").onclick = () => state.map.zoomIn();
-      document.getElementById("zoomOutBtn").onclick = () => state.map.zoomOut();
-      document.getElementById("fitBtn").onclick = () => {
-        if(state.bounds) state.map.fitBounds(state.bounds,{padding:[24,24]});
-      };
-      document.getElementById("locateBtn").onclick = () => {
-        state.map.locate({setView:true,maxZoom:15});
-      };
-      document.getElementById("layerBtn").onclick = () => {
-        state.showLabels = !state.showLabels;
-        document.getElementById("toggleLabels").classList.toggle("on",state.showLabels);
-        refreshLabels();
-      };
-    }
-
-    function drawGeojson(){
-      if(state.geoLayer) state.map.removeLayer(state.geoLayer);
-
-      state.geoLayer = L.geoJSON(state.features,{
-        style:featureStyle,
-        onEachFeature:(feature,layer)=>{
-          const sec = getFeatureSection(feature);
-
-          layer.on("click",()=>{
-            selectSection(sec,true);
-          });
-
-          layer.on("mouseover",()=>{
-            if(sec !== state.selected){
-              layer.setStyle({weight:1.6,color:"#7c3aed",fillOpacity:.30});
-            }
-          });
-
-          layer.on("mouseout",()=>{
-            state.geoLayer.resetStyle(layer);
-          });
-
-          const m = state.metrics.get(sec);
-          const tooltip = `
-            <div style="font-weight:850;margin-bottom:4px">Sección ${sec}</div>
-            <div>Participación: <b>${m ? pct(m.participacion) : "Sin dato"}</b></div>
-            <div>No voto: <b>${m ? pct(m.noVoto) : "Sin dato"}</b></div>
-            <div>LN: <b>${m ? numFmt(m.ln) : "Sin dato"}</b></div>
-          `;
-          layer.bindTooltip(tooltip,{sticky:true,direction:"top",opacity:.94});
-        }
-      }).addTo(state.map);
-
-      state.bounds = state.geoLayer.getBounds();
-      if(state.bounds.isValid()) state.map.fitBounds(state.bounds,{padding:[18,18]});
-      refreshLabels();
-    }
-
-    function refreshMap(){
-      if(!state.geoLayer) return;
-      state.geoLayer.setStyle(featureStyle);
-      refreshLabels();
-      updateLegend();
-    }
-
-    function refreshLabels(){
-      state.labelLayer.clearLayers();
-      if(!state.showLabels || !state.features || !state.showSections) return;
-
-      state.features.features.forEach(f => {
-        if(!passFilters(f)) return;
-        const sec = getFeatureSection(f);
-        if(!sec) return;
-
-        const layer = L.geoJSON(f);
-        const b = layer.getBounds();
-        if(!b.isValid()) return;
-        const center = b.getCenter();
-
-        const selected = state.selected === sec;
-        const icon = L.divIcon({
-          className:"",
-          html:`<div class="sectionLabel ${selected ? "selected" : ""}">${sec}</div>`,
-          iconSize:[54,22],
-          iconAnchor:[27,11]
-        });
-
-        L.marker(center,{icon,interactive:false}).addTo(state.labelLayer);
-      });
-    }
-
-    function populateFilters(){
-      const districts = new Set();
-      const zones = new Set();
-      const sections = new Set();
-      const comps = new Set();
-
-      if(state.features){
-        state.features.features.forEach(f => {
-          const sec = getFeatureSection(f);
-          if(sec) sections.add(sec);
-          const d = getFeatureDistrict(f);
-          const z = getFeatureZone(f);
-          if(d !== "Sin dato") districts.add(d);
-          if(z !== "Sin dato") zones.add(z);
-        });
-      }
-
-      state.metrics.forEach(m => {
-        if(m.distrito && m.distrito !== "Sin dato") districts.add(m.distrito);
-        if(m.zona && m.zona !== "Sin dato") zones.add(m.zona);
-        if(m.seccion) sections.add(m.seccion);
-        if(m.composicion) comps.add(m.composicion);
-      });
-
-      fillSelect("districtSelect",Array.from(districts).sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true})), "Todos");
-      fillSelect("zoneSelect",Array.from(zones).sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true})), "Todas");
-      fillSelect("compositionSelect",Array.from(comps).sort(), "Todas");
-
-      const datalist = document.getElementById("sectionOptions");
-      datalist.innerHTML = "";
-      Array.from(sections).sort((a,b)=>Number(a)-Number(b)).forEach(sec => {
-        const opt = document.createElement("option");
-        opt.value = sec;
-        datalist.appendChild(opt);
-      });
-    }
-
-    function fillSelect(id,items,allLabel){
-      const sel = document.getElementById(id);
-      sel.innerHTML = `<option value="all">${allLabel}</option>`;
-      items.forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v;
-        opt.textContent = id === "districtSelect" && v !== "Sin dato" ? `${v} - Mazatlán` : v;
-        sel.appendChild(opt);
-      });
-    }
-
-    function updateLegend(){
-      const title = document.getElementById("legendMetricTitle");
-      const bins = document.getElementById("legendBins");
-      document.getElementById("mapChipMetric").textContent = metricNames[state.indicator];
-
-      if(state.indicator === "participacion"){
-        title.textContent = "Participación (%)";
-        bins.innerHTML = "<span>0 - 30</span><span>30 - 40</span><span>40 - 50</span><span>50 - 60</span><span>60 - 70</span><span>70+</span>";
-      } else if(state.indicator === "no_voto"){
-        title.textContent = "No voto (%)";
-        bins.innerHTML = "<span>0 - 30</span><span>30 - 40</span><span>40 - 50</span><span>50 - 60</span><span>60 - 70</span><span>70+</span>";
-      } else if(state.indicator === "oportunidad"){
-        title.textContent = "Índice de oportunidad";
-        bins.innerHTML = "<span>0 - .30</span><span>.30 - .40</span><span>.40 - .50</span><span>.50 - .60</span><span>.60 - .70</span><span>.70+</span>";
-      } else if(state.indicator === "brecha_edad"){
-        title.textContent = "Brecha de edad";
-        bins.innerHTML = "<span>0 - 15</span><span>15 - 25</span><span>25 - 35</span><span>35 - 50</span><span>50+</span><span>Alta</span>";
-      } else if(state.indicator === "hhi"){
-        title.textContent = "HHI";
-        bins.innerHTML = "<span>0 - .15</span><span>.15 - .25</span><span>.25 - .35</span><span>.35 - .50</span><span>.50+</span><span>Alta</span>";
-      } else {
-        title.textContent = "Cramér V";
-        bins.innerHTML = "<span>0 - .15</span><span>.15 - .25</span><span>.25 - .35</span><span>.35 - .50</span><span>.50+</span><span>Alta</span>";
-      }
-    }
-
-    function selectSection(sec,fit=false){
-      sec = cleanSection(sec);
-      if(!sec) return;
-      state.selected = sec;
-      document.getElementById("sectionSearch").value = sec;
-      refreshMap();
-      updatePanel(sec);
-
-      if(fit && state.features){
-        const f = state.features.features.find(x => getFeatureSection(x) === sec);
-        if(f){
-          const b = L.geoJSON(f).getBounds();
-          if(b.isValid()) state.map.fitBounds(b,{padding:[80,80],maxZoom:15});
-        }
-      }
-    }
-
-    function updatePanel(sec){
-      const panel = document.getElementById("rightPanel");
-      const m = state.metrics.get(sec);
-
-      if(!m){
-        panel.innerHTML = `
-          <div class="panelTop">
-            <div class="panelTitleBlock">
-              <h2>Sección ${sec} <span class="pill">Sin datos</span></h2>
-              <p>Mazatlán, Sinaloa</p>
-            </div>
-            <div class="panelIcons"><div class="panelIcon" id="closePanel">×</div></div>
-          </div>
-          <div class="emptyState">
-            <div>
-              <h3>No hay datos para esta sección</h3>
-              <p>La geometría existe, pero no se encontró información electoral vinculada en el CSV.</p>
-            </div>
-          </div>
-        `;
-        document.getElementById("closePanel").onclick = clearSelected;
-        return;
-      }
-
-      const bars = m.ageStats.map(d => {
-        const h = Math.max(2,Math.round(d.participacion * 100));
-        return `
-          <div class="barItem">
-            <div class="barVal">${(d.participacion*100).toFixed(1)}</div>
-            <div class="bar" style="height:${h}%"></div>
-            <div class="barLabel">${d.label}</div>
-          </div>
-        `;
-      }).join("");
-
-      const insight = buildInsight(m);
-
-      panel.innerHTML = `
-        <div class="panelTop">
-          <div class="panelTitleBlock">
-            <h2>Sección ${m.seccion} <span class="pill">Seleccionada</span></h2>
-            <p>Distrito ${m.distrito}  •  Zona ${m.zona}  •  Mazatlán, Sinaloa</p>
-          </div>
-          <div class="panelIcons">
-            <div class="panelIcon">☆</div>
-            <div class="panelIcon" id="closePanel">×</div>
-          </div>
-        </div>
-
-        <div class="card chartCard">
-          <div class="chartTitle">Participación del voto por edad (%) <span style="color:#64748b">ⓘ</span></div>
-          <div class="barChart">
-            <div class="yAxis"><span>90</span><span>60</span><span>30</span><span>0</span></div>
-            <div class="bars">${bars}</div>
-          </div>
-        </div>
-
-        <div class="card rankCard">
-          <div class="rankTitle">Top indicadores de la sección</div>
-          <div class="rankList">
-            <div class="rankRow"><span class="rankNum">1</span><span>Participación</span><span class="rankVal">${pct(m.participacion)}</span></div>
-            <div class="rankRow"><span class="rankNum">2</span><span>No voto</span><span class="rankVal">${pct(m.noVoto)}</span></div>
-            <div class="rankRow"><span class="rankNum">3</span><span>Índice de oportunidad</span><span class="rankVal">${m.oportunidad.toFixed(2)}</span></div>
-            <div class="rankRow"><span class="rankNum">4</span><span>Lista nominal</span><span class="rankVal">${numFmt(m.ln)}</span></div>
-            <div class="rankRow"><span class="rankNum">5</span><span>Brecha de edad</span><span class="rankVal">${pp(m.brechaEdad)}</span></div>
-          </div>
-        </div>
-
-        <div class="metricGrid">
-          ${metricCard("☑","Participación",pct(m.participacion),`Media distrital: ${pct(m.distritoProm)}`)}
-          ${metricCard("✕","No voto",pct(m.noVoto),`Abstención estimada`)}
-          ${metricCard("▤","Lista nominal",numFmt(m.ln),`Base electoral`)}
-          ${metricCard("△","Brecha de edad",pp(m.brechaEdad),`Máximo vs mínimo por edad`)}
-          ${metricCard("♟","Grupo dominante",m.grupoDominante,`${pct(m.grupoShare)} del padrón`)}
-          ${metricCard("◇","Índice de oportunidad",m.oportunidad.toFixed(2),opportunityText(m.oportunidad))}
-          ${metricCard("#","HHI",m.hhi.toFixed(2),`${m.dominancia} concentración`)}
-          ${metricCard("✣","Cramér V",m.cramer.toFixed(2),cramerText(m.cramer))}
-          ${metricCard("⬡","Tipo de composición",m.composicion,compositionSub(m))}
-        </div>
-
-        <div class="insightBox">
-          <div class="bolt">ϟ</div>
-          <h3>Lectura rápida de la sección</h3>
-          <p>${insight}</p>
-        </div>
-      `;
-
-      document.getElementById("closePanel").onclick = clearSelected;
-    }
-
-    function metricCard(icon,title,value,sub){
-      return `
-        <div class="card metricCard">
-          <div class="metricHead"><span class="metricIcon">${icon}</span>${title}</div>
-          <div class="metricValue">${value}</div>
-          <div class="metricSub">${sub}</div>
-        </div>
-      `;
-    }
-
-    function opportunityText(v){
-      if(v >= .70) return "Oportunidad alta";
-      if(v >= .50) return "Oportunidad media";
-      return "Oportunidad baja";
-    }
-
-    function cramerText(v){
-      if(v >= .50) return "Asociación fuerte";
-      if(v >= .30) return "Asociación moderada";
-      if(v >= .15) return "Asociación baja";
-      return "Asociación débil";
-    }
-
-    function compositionSub(m){
-      if(m.hhi < .24) return "Distribución equilibrada";
-      if(m.hhi < .34) return "Competencia abierta";
-      return "Perfil concentrado";
-    }
-
-    function buildInsight(m){
-      const rel = m.participacion >= m.distritoProm ? "ligeramente superior" : "por debajo";
-      const gap = m.brechaEdad >= .30 ? "amplia" : m.brechaEdad >= .18 ? "media" : "baja";
-      const opp = m.oportunidad >= .70 ? "alto" : m.oportunidad >= .50 ? "medio" : "bajo";
-      const youth = m.ageStats.find(d => d.label === "18–24");
-      const senior = m.ageStats.find(d => d.label === "65+");
-      const focus = youth && senior && youth.participacion < senior.participacion ? "movilizar jóvenes" : "consolidar los grupos con menor participación";
-      return `La sección ${m.seccion} presenta una participación ${rel} al promedio distrital. El grupo dominante es ${m.grupoDominante}, con ${pct(m.grupoShare)} del padrón. La brecha generacional es ${gap} (${pp(m.brechaEdad)}), lo que sugiere potencial para ${focus}. La composición es ${m.composicion.toLowerCase()} y el nivel de oportunidad es ${opp}, por lo que pequeñas variaciones en movilización pueden cambiar la lectura territorial.`;
-    }
-
-    function clearSelected(){
-      state.selected = null;
-      document.getElementById("sectionSearch").value = "";
-      refreshMap();
-      document.getElementById("rightPanel").innerHTML = `
-        <div class="emptyState">
-          <div>
-            <h3>Selecciona una sección</h3>
-            <p>Haz clic en el mapa o busca una sección para ver su perfil electoral.</p>
-          </div>
-        </div>
-      `;
-    }
-
-    function bindUI(){
-      document.getElementById("indicatorSelect").onchange = e => {
-        state.indicator = e.target.value;
-        refreshMap();
-        if(state.selected) updatePanel(state.selected);
-      };
-
-      document.getElementById("districtSelect").onchange = e => {
-        state.district = e.target.value;
-        refreshMap();
-      };
-
-      document.getElementById("zoneSelect").onchange = e => {
-        state.zone = e.target.value;
-        refreshMap();
-      };
-
-      document.getElementById("compositionSelect").onchange = e => {
-        state.composition = e.target.value;
-        refreshMap();
-      };
-
-      document.getElementById("dominanceSelect").onchange = e => {
-        state.dominance = e.target.value;
-        refreshMap();
-      };
-
-      document.getElementById("sectionSearch").addEventListener("change",e=>{
-        const sec = cleanSection(e.target.value);
-        if(sec) selectSection(sec,true);
-      });
-
-      document.getElementById("topSearch").addEventListener("keydown",e=>{
-        if(e.key === "Enter"){
-          const sec = cleanSection(e.target.value);
-          if(sec) selectSection(sec,true);
-        }
-      });
-
-      document.getElementById("clearFilters").onclick = () => {
-        state.indicator = "participacion";
-        state.district = "all";
-        state.zone = "all";
-        state.composition = "all";
-        state.dominance = "all";
-        document.getElementById("indicatorSelect").value = "participacion";
-        document.getElementById("districtSelect").value = "all";
-        document.getElementById("zoneSelect").value = "all";
-        document.getElementById("compositionSelect").value = "all";
-        document.getElementById("dominanceSelect").value = "all";
-        refreshMap();
-      };
-
-      document.getElementById("toggleSections").onclick = e => {
-        state.showSections = !state.showSections;
-        e.currentTarget.classList.toggle("on",state.showSections);
-        refreshMap();
-      };
-
-      document.getElementById("toggleLabels").onclick = e => {
-        state.showLabels = !state.showLabels;
-        e.currentTarget.classList.toggle("on",state.showLabels);
-        refreshLabels();
-      };
-
-      document.getElementById("toggleDistricts").onclick = e => {
-        state.showDistricts = !state.showDistricts;
-        e.currentTarget.classList.toggle("on",state.showDistricts);
-      };
-
-      document.getElementById("togglePOI").onclick = e => {
-        state.showPOI = !state.showPOI;
-        e.currentTarget.classList.toggle("on",state.showPOI);
-      };
-
-      document.getElementById("toggleTransit").onclick = e => {
-        state.showTransit = !state.showTransit;
-        e.currentTarget.classList.toggle("on",state.showTransit);
-      };
-
-      document.getElementById("exportBtn").onclick = exportSelected;
-      document.getElementById("compareBtn").onclick = () => alert("Selecciona dos secciones para activar la comparación.");
-    }
-
-    function exportSelected(){
-      if(!state.selected || !state.metrics.has(state.selected)){
-        alert("Selecciona una sección primero.");
-        return;
-      }
-      const m = state.metrics.get(state.selected);
-      const data = {
-        seccion:m.seccion,
-        distrito:m.distrito,
-        zona:m.zona,
-        participacion:m.participacion,
-        no_voto:m.noVoto,
-        lista_nominal:m.ln,
-        oportunidad:m.oportunidad,
-        brecha_edad:m.brechaEdad,
-        grupo_dominante:m.grupoDominante,
-        hhi:m.hhi,
-        cramer_v:m.cramer,
-        composicion:m.composicion,
-        edad:m.ageStats
-      };
-      const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `seccion_${m.seccion}_perfil.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    async function load(){
-      initMap();
-      bindUI();
-
-      try{
-        const [geo,data] = await Promise.all([
-          fetch(CONFIG.geojsonUrl).then(r=>{
-            if(!r.ok) throw new Error("No se encontró el GeoJSON.");
-            return r.json();
-          }),
-          d3.csv(CONFIG.dataUrl)
-        ]);
-
-        state.features = geo;
-        state.rows = data;
-
-        buildMetrics(data);
-        enrichMetricsWithGeo();
-        populateFilters();
-        drawGeojson();
-        updateLegend();
-
-        const first = Array.from(state.metrics.keys()).sort((a,b)=>Number(a)-Number(b))[0];
-        if(first) selectSection(first,false);
-
-        document.getElementById("loading").style.display = "none";
-      }catch(err){
-        console.error(err);
-        document.getElementById("loading").innerHTML = `
-          <div class="loadingCard" style="max-width:520px;line-height:1.45;display:block">
-            <div style="font-size:16px;font-weight:950;margin-bottom:8px">No pude cargar los archivos</div>
-            <div style="font-size:13px;color:#475569;font-weight:650">
-              Revisa que existan <b>secciones_mazatlan.geojson</b> y <b>datos_mazatlan.csv</b> en la misma carpeta que este index.
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    load();
-  </script>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo"><div><span></span><span></span><span></span><span></span></div></div><div><h1>Territorio Electoral</h1><p>Análisis y estrategia</p></div></div>
+<div class="sideTop"><h2>Filtros</h2><button id="clear">Limpiar todo ↻</button></div>
+<div class="fg"><label>Indicador <span class="info">i</span></label><select id="indicator"><option value="participacion">Participación</option><option value="no_voto">No voto</option><option value="oportunidad">Índice de oportunidad</option><option value="hhi">HHI</option><option value="cramer">Cramér V</option><option value="aspirantes">Aspirantes</option></select></div>
+<div class="fg"><label>Distrito <span class="info">i</span></label><select id="district"><option value="all">Todos</option></select></div>
+<div class="fg"><label>Zona <span class="info">i</span></label><select id="zone"><option value="all">Todas</option></select></div>
+<div class="fg"><label>Sección <span class="info">i</span></label><input id="sectionInput" list="sections" placeholder="Buscar sección..."><datalist id="sections"></datalist></div>
+<div class="fg"><label>Composición <span class="info">i</span></label><select id="composition"><option value="all">Todas</option></select></div>
+<div class="fg"><label>Dominancia <span class="info">i</span></label><select id="dominance"><option value="all">Todas</option><option>Baja</option><option>Media</option><option>Alta</option></select></div>
+<div class="divider"><div class="sectionTitle">Controles rápidos <span>⌃</span></div><div class="toggleRow">Secciones <div class="sw on" id="swSections"></div></div><div class="toggleRow">Etiquetas <div class="sw on" id="swLabels"></div></div><div class="toggleRow">Límites distritales <div class="sw on"></div></div><div class="toggleRow">Puntos de interés <div class="sw"></div></div><div class="toggleRow">Transporte público <div class="sw on"></div></div></div>
+<div class="divider"><div class="sectionTitle">Leyenda <span>⌃</span></div><div style="font-size:13px;font-weight:900;margin-bottom:10px" id="legendTitle">Participación (%)</div><div class="ramp"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="bins" id="bins"><span>0-30</span><span>30-40</span><span>40-50</span><span>50-60</span><span>60-70</span><span>70+</span></div></div>
+</aside>
+
+<header class="topbar">
+<div class="loc"><div class="pin">⌖</div><div><h2>Mazatlán, Sinaloa</h2><p>Secciones electorales</p></div></div>
+<div class="search"><b>⌕</b><input id="topSearch" placeholder="Buscar dirección o sección..."></div>
+<button class="topBtn">⚖ Comparar secciones</button><button class="topBtn" id="export">⇩ Exportar</button><div class="avatar">AM</div>
+</header>
+
+<main class="mapWrap">
+<div id="map"></div>
+<div class="chip">Vista: <strong id="chip">Participación</strong> ▾</div>
+<div class="tools"><button class="tool" id="fit">⛶</button><button class="tool" id="zin">+</button><button class="tool" id="zout">−</button></div>
+<div class="loading" id="loading"><div class="loadCard">Cargando información electoral...</div></div>
+</main>
+
+<section class="panel" id="panel"><div class="empty"><div><h3>Selecciona una sección</h3><p>Haz clic en el mapa o busca una sección para ver su perfil electoral.</p></div></div></section>
+</div>
+
+<script>
+const FILES={
+geo:"mazatlan_secciones_5pct_wgs84.geojson",
+comp:"composicion_2024_indices.json",
+asp:"secciones_aspirantes.json"
+};
+
+const state={map:null,geo:null,labels:L.layerGroup(),features:null,metrics:new Map(),selected:null,indicator:"participacion",district:"all",zone:"all",composition:"all",dominance:"all",showSections:true,showLabels:true,bounds:null};
+
+const indNames={participacion:"Participación",no_voto:"No voto",oportunidad:"Índice de oportunidad",hhi:"HHI",cramer:"Cramér V",aspirantes:"Aspirantes"};
+
+const ageBands=[
+{label:"18–24",alt:["18_24","18a24","18_29","18a29"],min:18,max:24},
+{label:"25–34",alt:["25_34","25a34","30_44","30a44"],min:25,max:34},
+{label:"35–44",alt:["35_44","35a44","30_44","30a44"],min:35,max:44},
+{label:"45–54",alt:["45_54","45a54","45_59","45a59"],min:45,max:54},
+{label:"55–64",alt:["55_64","55a64","60_mas","60mas"],min:55,max:64},
+{label:"65+",alt:["65_mas","65mas","60_mas","60mas"],min:65,max:120}
+];
+
+function nk(x){return String(x??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")}
+function keyMap(o){const m={};Object.keys(o||{}).forEach(k=>m[nk(k)]=k);return m}
+function val(o,keys){const m=keyMap(o);for(const k of keys){const kk=nk(k);if(m[kk]!=null)return o[m[kk]]}for(const k of keys){const kk=nk(k);const found=Object.keys(m).find(x=>x.includes(kk)||kk.includes(x));if(found)return o[m[found]]}return ""}
+function num(x){if(x==null||x==="")return 0;const y=Number(String(x).replace(/,/g,"").replace("%","").trim());return Number.isFinite(y)?y:0}
+function pctScale(x){x=num(x);if(x>1)return x/100;return x}
+function secClean(x){const m=String(x??"").match(/\d+/);return m?String(parseInt(m[0],10)):""}
+function fmt(x){return new Intl.NumberFormat("es-MX").format(Math.round(num(x)))}
+function pct(x,d=1){return Number.isFinite(x)?`${(x*100).toFixed(d)}%`:"—"}
+function pp(x,d=1){return Number.isFinite(x)?`${(x*100).toFixed(d)} pp`:"—"}
+function clamp(x){return Math.max(0,Math.min(1,x))}
+function toArray(data){if(Array.isArray(data))return data;if(data&&data.features)return data.features.map(f=>f.properties||f);if(data&&typeof data==="object")return Object.entries(data).map(([k,v])=>({__key:k,...(v||{})}));return []}
+function getSecFromFeature(f){return secClean(val(f.properties||{},["seccion","sección","SECCION","secc","cve_secc","id_seccion","id"]))}
+function getDistrictFromFeature(f){const x=val(f.properties||{},["distrito","distrito_l","distrito_local","def","del"]);return x===""?"Sin dato":String(x).trim().padStart(2,"0")}
+function getZoneFromFeature(f){const x=val(f.properties||{},["zona","zona_electoral","zone"]);return x===""?"Sin dato":String(x).trim()}
+function ageLabel(age){const b=ageBands.find(x=>age>=x.min&&age<=x.max);return b?b.label:"Sin edad"}
+function shareText(x){return pct(x)}
+function hhiLevel(x){return x>=.36?"Alta":x>=.28?"Media":"Baja"}
+function cramerText(x){return x>=.50?"Asociación fuerte":x>=.30?"Asociación moderada":x>=.15?"Asociación baja":"Asociación débil"}
+function oppText(x){return x>=.70?"Oportunidad alta":x>=.50?"Oportunidad media":"Oportunidad baja"}
+
+function fieldBySuffix(row,stems,suffs){
+const km=keyMap(row);
+for(const s of suffs){
+for(const stem of stems){
+const patterns=[`${stem}_${s}`,`${stem}${s}`,`${s}_${stem}`].map(nk);
+for(const p of patterns){if(km[p]!=null)return row[km[p]]}
+}
+}
+return "";
+}
+
+function ageFromAggregate(row){
+let stats=[];let hasVote=false;let hasCount=false;
+for(const b of ageBands){
+let ln=num(fieldBySuffix(row,["ln","lista_nominal","lista"],b.alt));
+let sv=num(fieldBySuffix(row,["sv","votos","voto","si_voto"],b.alt));
+let nv=num(fieldBySuffix(row,["nv","no_voto","novoto"],b.alt));
+let part=fieldBySuffix(row,["participacion","part","p","votacion"],b.alt);
+let count=num(fieldBySuffix(row,["edad","grupo","total","aspirantes"],b.alt));
+let p=part!==""?pctScale(part):(ln>0?sv/ln:null);
+if(p!=null)hasVote=true;
+if(count>0)hasCount=true;
+stats.push({label:b.label,ln,sv,nv,count,participacion:p??0,share:0});
+}
+const totalLn=stats.reduce((a,b)=>a+b.ln,0);
+const totalCount=stats.reduce((a,b)=>a+b.count,0);
+stats=stats.map(d=>({...d,share:totalLn>0?d.ln/totalLn:(totalCount>0?d.count/totalCount:0)}));
+return {stats,mode:hasVote?"participacion":hasCount?"composicion":"vacio"};
+}
+
+function cramerCalc(stats){
+const total=stats.reduce((a,d)=>a+d.sv+d.nv,0);
+if(total<=0)return 0;
+const rows=stats.filter(d=>d.sv+d.nv>0).map(d=>[d.sv,d.nv]);
+if(rows.length<2)return 0;
+const rowTotals=rows.map(r=>r[0]+r[1]);
+const colTotals=[rows.reduce((a,r)=>a+r[0],0),rows.reduce((a,r)=>a+r[1],0)];
+let chi=0;
+rows.forEach((r,i)=>r.forEach((obs,j)=>{const exp=rowTotals[i]*colTotals[j]/total;if(exp>0)chi+=(obs-exp)**2/exp}));
+return Math.sqrt(chi/(total*Math.min(rows.length-1,1)));
+}
+
+function buildFromRaw(rows){
+const years=rows.map(r=>num(val(r,["AELEC","anio","año","year"]))).filter(Boolean);
+const yr=years.length?Math.max(...years):null;
+const active=yr?rows.filter(r=>num(val(r,["AELEC","anio","año","year"]))===yr):rows;
+const groups=new Map();
+active.forEach(r=>{
+const sec=secClean(val(r,["seccion","sección","SECCION","cve_secc","__key"]));if(!sec)return;
+if(!groups.has(sec))groups.set(sec,{seccion:sec,distrito:String(val(r,["distrito_l","distrito","def","del"])||"Sin dato").padStart(2,"0"),zona:String(val(r,["zona"])||"Sin dato"),ln:0,sv:0,nv:0,ns:0,age:new Map()});
+const g=groups.get(sec);
+const edad=num(val(r,["edad","EDAD","age"]));
+const lab=ageLabel(edad);
+const ln=num(val(r,["ln","LN","lista_nominal"]));
+const sv=num(val(r,["sv","SV","si_voto","voto"]));
+const nv=num(val(r,["nv","NV","no_voto"]));
+g.ln+=ln;g.sv+=sv;g.nv+=nv;
+if(!g.age.has(lab))g.age.set(lab,{label:lab,ln:0,sv:0,nv:0,count:0});
+const a=g.age.get(lab);a.ln+=ln;a.sv+=sv;a.nv+=nv;a.count+=ln;
+});
+return groups;
+}
+
+function metricFromGroup(g){
+let stats=ageBands.map(b=>{
+const d=g.age.get(b.label)||{label:b.label,ln:0,sv:0,nv:0,count:0};
+return {...d,participacion:d.ln>0?d.sv/d.ln:0,share:g.ln>0?d.ln/g.ln:0}
+});
+return finalizeMetric({...g,ageStats:stats,ageMode:"participacion"});
+}
+
+function metricFromAggregate(r){
+const sec=secClean(val(r,["seccion","sección","SECCION","cve_secc","__key"]));if(!sec)return null;
+let ln=num(val(r,["ln","LN","lista_nominal","lista nominal","lista_nominal_total","total_ln"]));
+let sv=num(val(r,["sv","SV","si_voto","votos","votantes","total_votantes"]));
+let nv=num(val(r,["nv","NV","no_voto","no voto","abstencion","abstención"]));
+let pRaw=val(r,["participacion","participación","participacion_estimada","part","porcentaje_participacion"]);
+let p=pRaw!==""?pctScale(pRaw):(ln>0?sv/ln:0);
+if(!nv&&ln&&sv)nv=Math.max(0,ln-sv);
+let no=val(r,["no_voto_pct","no_voto","abstencion_pct","abstencion"]);
+let noV=no!==""?pctScale(no):(ln>0?nv/ln:1-p);
+const ag=ageFromAggregate(r);
+let m={
+seccion:sec,
+distrito:String(val(r,["distrito_l","distrito","def","del"])||"Sin dato").padStart(2,"0"),
+zona:String(val(r,["zona","zona_electoral"])||"Sin dato"),
+ln:ln||num(val(r,["total","total_personas","padron","padrón"])),
+sv:sv||Math.round((ln||0)*p),
+nv:nv||Math.round((ln||0)*noV),
+participacion:p,
+noVoto:noV,
+hhi:pctScale(val(r,["hhi","HHI","indice_hhi"]))||0,
+cramer:pctScale(val(r,["cramer_v","cramerv","cramer","Cramér V"]))||0,
+oportunidad:pctScale(val(r,["indice_oportunidad","oportunidad","score_oportunidad"]))||0,
+grupoDominante:String(val(r,["grupo_dominante","rango_edad_principal","dominante"])||"Sin dato"),
+composicion:String(val(r,["tipo_composicion","composicion","composición"])||"Mixta"),
+dominancia:String(val(r,["dominancia"])||""),
+ageStats:ag.stats,
+ageMode:ag.mode
+};
+return finalizeMetric(m);
+}
+
+function finalizeMetric(m){
+if(!m.participacion)m.participacion=m.ln>0?m.sv/m.ln:0;
+if(!m.noVoto)m.noVoto=m.ln>0?m.nv/m.ln:Math.max(0,1-m.participacion);
+const valid=m.ageStats.filter(d=>d.participacion>0||d.share>0);
+const maxP=valid.length?Math.max(...valid.map(d=>d.participacion)):0;
+const minP=valid.length?Math.min(...valid.map(d=>d.participacion)):0;
+m.brechaEdad=maxP-minP;
+if(!m.hhi)m.hhi=m.ageStats.reduce((a,d)=>a+(d.share||0)*(d.share||0),0);
+if(!m.cramer)m.cramer=cramerCalc(m.ageStats);
+if(!m.oportunidad)m.oportunidad=clamp(m.noVoto*.52+m.brechaEdad*.32+(1-m.hhi)*.16);
+const dom=valid.length?valid.slice().sort((a,b)=>(b.share||0)-(a.share||0))[0]:null;
+if(!m.grupoDominante||m.grupoDominante==="Sin dato")m.grupoDominante=dom?dom.label:"Sin dato";
+m.grupoShare=dom?dom.share:0;
+if(!m.composicion||m.composicion==="Mixta"){
+if(m.grupoDominante.includes("18")||m.grupoDominante.includes("25"))m.composicion=m.hhi<.30?"Joven balanceada":"Joven dominante";
+else if(m.grupoDominante.includes("45")||m.grupoDominante.includes("55")||m.grupoDominante.includes("65"))m.composicion=m.hhi<.30?"Adulta balanceada":"Adulta dominante";
+else m.composicion="Mixta";
+}
+m.dominancia=m.dominancia||hhiLevel(m.hhi);
+return m;
+}
+
+function mergeAspirantes(data){
+const arr=toArray(data);
+arr.forEach(r=>{
+const sec=secClean(val(r,["seccion","SECCION","__key"]));if(!sec)return;
+let m=state.metrics.get(sec);
+if(!m){
+m=finalizeMetric({seccion:sec,distrito:String(val(r,["distrito_l","distrito"])||"Sin dato").padStart(2,"0"),zona:"Sin dato",ln:0,sv:0,nv:0,participacion:0,noVoto:0,hhi:0,cramer:0,oportunidad:0,grupoDominante:String(val(r,["rango_edad_principal"])||"Sin dato"),composicion:"Aspirantes",dominancia:String(val(r,["semaforo"])||"Sin dato"),ageStats:[],ageMode:"aspirantes"});
+state.metrics.set(sec,m);
+}
+m.aspirantes=num(val(r,["total_aspirantes","aspirantes","total"]));
+m.semaforo=String(val(r,["semaforo"])||"Sin dato");
+m.color=String(val(r,["color"])||"");
+m.rangoAspirante=String(val(r,["rango_edad_principal"])||"Sin dato");
+const a18=num(val(r,["edad_18_29"])),a30=num(val(r,["edad_30_44"])),a45=num(val(r,["edad_45_59"])),a60=num(val(r,["edad_60_mas"]));
+const total=a18+a30+a45+a60;
+if((!m.ageStats||!m.ageStats.some(x=>x.participacion>0))&&total>0){
+m.ageMode="aspirantes";
+m.ageStats=[
+{label:"18–29",count:a18,share:a18/total,participacion:a18/total},
+{label:"30–44",count:a30,share:a30/total,participacion:a30/total},
+{label:"45–59",count:a45,share:a45/total,participacion:a45/total},
+{label:"60+",count:a60,share:a60/total,participacion:a60/total}
+];
+}
+});
+}
+
+function colorFor(m){
+if(!m)return"#cbd5e1";
+let v=metricValue(m);
+if(state.indicator==="aspirantes"){
+if(m.semaforo==="Verde")return"#86efac";
+if(m.semaforo==="Amarillo")return"#fde68a";
+if(m.semaforo==="Rojo")return"#fca5a5";
+return"#cbd5e1";
+}
+if(state.indicator==="hhi"||state.indicator==="cramer"){
+if(v<.15)return"#bbf7d0";if(v<.25)return"#86efac";if(v<.35)return"#fde68a";if(v<.5)return"#fdba74";return"#fca5a5";
+}
+if(v<.30)return"#fee2e2";if(v<.40)return"#fecaca";if(v<.50)return"#fed7aa";if(v<.60)return"#fde68a";if(v<.70)return"#bbf7d0";return"#86efac";
+}
+
+function metricValue(m){
+if(!m)return 0;
+if(state.indicator==="participacion")return m.participacion;
+if(state.indicator==="no_voto")return m.noVoto;
+if(state.indicator==="oportunidad")return m.oportunidad;
+if(state.indicator==="hhi")return m.hhi;
+if(state.indicator==="cramer")return m.cramer;
+if(state.indicator==="aspirantes")return m.aspirantes||0;
+return m.participacion;
+}
+
+function pass(f){
+const sec=getSecFromFeature(f),m=state.metrics.get(sec);
+if(!m)return true;
+if(state.district!=="all"&&m.distrito!==state.district)return false;
+if(state.zone!=="all"&&m.zona!==state.zone)return false;
+if(state.composition!=="all"&&m.composicion!==state.composition)return false;
+if(state.dominance!=="all"&&m.dominancia!==state.dominance&&m.semaforo!==state.dominance)return false;
+return true;
+}
+
+function style(f){
+const sec=getSecFromFeature(f),m=state.metrics.get(sec),sel=sec===state.selected,ok=pass(f);
+if(!state.showSections)return{fillOpacity:0,opacity:0,weight:0};
+return{fillColor:colorFor(m),fillOpacity:ok?(sel?.30:.17):.035,color:sel?"#7c3aed":ok?"rgba(255,255,255,.95)":"rgba(148,163,184,.35)",weight:sel?2.7:.75,opacity:sel?1:.9};
+}
+
+function initMap(){
+state.map=L.map("map",{center:[23.2459,-106.4111],zoom:12,zoomControl:false,preferCanvas:true});
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap",opacity:.95}).addTo(state.map);
+state.labels.addTo(state.map);
+document.getElementById("zin").onclick=()=>state.map.zoomIn();
+document.getElementById("zout").onclick=()=>state.map.zoomOut();
+document.getElementById("fit").onclick=()=>state.bounds&&state.map.fitBounds(state.bounds,{padding:[25,25]});
+}
+
+function draw(){
+if(state.geo)state.map.removeLayer(state.geo);
+state.geo=L.geoJSON(state.features,{style,onEachFeature:(f,l)=>{
+const sec=getSecFromFeature(f);
+l.on("click",()=>select(sec,true));
+l.on("mouseover",()=>{if(sec!==state.selected)l.setStyle({weight:1.7,color:"#7c3aed",fillOpacity:.27})});
+l.on("mouseout",()=>state.geo.resetStyle(l));
+const m=state.metrics.get(sec);
+l.bindTooltip(`<b>Sección ${sec}</b><br>Participación: ${m?pct(m.participacion):"Sin dato"}<br>No voto: ${m?pct(m.noVoto):"Sin dato"}<br>LN: ${m?fmt(m.ln):"Sin dato"}<br>Aspirantes: ${m?fmt(m.aspirantes||0):"Sin dato"}`,{sticky:true});
+}}).addTo(state.map);
+state.bounds=state.geo.getBounds();
+if(state.bounds.isValid())state.map.fitBounds(state.bounds,{padding:[20,20]});
+labels();
+}
+
+function labels(){
+state.labels.clearLayers();
+if(!state.showLabels)return;
+state.features.features.forEach(f=>{
+if(!pass(f))return;
+const sec=getSecFromFeature(f);if(!sec)return;
+const b=L.geoJSON(f).getBounds();if(!b.isValid())return;
+L.marker(b.getCenter(),{interactive:false,icon:L.divIcon({className:"",html:`<div class="secLabel ${sec===state.selected?"sel":""}">${sec}</div>`,iconSize:[52,22],iconAnchor:[26,11]})}).addTo(state.labels);
+});
+}
+
+function refresh(){
+if(state.geo)state.geo.setStyle(style);
+labels();
+document.getElementById("chip").textContent=indNames[state.indicator];
+document.getElementById("legendTitle").textContent=state.indicator==="aspirantes"?"Semáforo de aspirantes":indNames[state.indicator];
+if(state.selected)panel(state.selected);
+}
+
+function fillFilters(){
+const d=new Set(),z=new Set(),c=new Set(),s=new Set();
+state.metrics.forEach(m=>{if(m.distrito&&m.distrito!=="Sin dato")d.add(m.distrito);if(m.zona&&m.zona!=="Sin dato")z.add(m.zona);if(m.composicion)c.add(m.composicion);s.add(m.seccion)});
+state.features.features.forEach(f=>{s.add(getSecFromFeature(f));const df=getDistrictFromFeature(f);if(df!=="Sin dato")d.add(df);const zf=getZoneFromFeature(f);if(zf!=="Sin dato")z.add(zf)});
+fill("district",Array.from(d).sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true})),"Todos",x=>`${x} - Mazatlán`);
+fill("zone",Array.from(z).sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true})),"Todas");
+fill("composition",Array.from(c).sort(),"Todas");
+const dl=document.getElementById("sections");dl.innerHTML="";
+Array.from(s).filter(Boolean).sort((a,b)=>Number(a)-Number(b)).forEach(x=>{const o=document.createElement("option");o.value=x;dl.appendChild(o)});
+}
+
+function fill(id,arr,all,lab){
+const el=document.getElementById(id);el.innerHTML=`<option value="all">${all}</option>`;
+arr.forEach(x=>{const o=document.createElement("option");o.value=x;o.textContent=lab?lab(x):x;el.appendChild(o)});
+}
+
+function select(sec,fit=false){
+sec=secClean(sec);if(!sec)return;
+state.selected=sec;
+document.getElementById("sectionInput").value=sec;
+refresh();
+panel(sec);
+if(fit){
+const f=state.features.features.find(x=>getSecFromFeature(x)===sec);
+if(f){const b=L.geoJSON(f).getBounds();if(b.isValid())state.map.fitBounds(b,{padding:[70,70],maxZoom:15})}
+}
+}
+
+function panel(sec){
+const p=document.getElementById("panel"),m=state.metrics.get(sec);
+if(!m){p.innerHTML=`<div class="panelHead"><div><h2>Sección ${sec}<span class="pill">Sin datos</span></h2><small>No se encontró información vinculada para esta sección.</small></div><div class="close" onclick="clearPanel()">×</div></div>`;return}
+const chartTitle=m.ageMode==="participacion"?"Participación del voto por edad (%)":m.ageMode==="aspirantes"?"Distribución de aspirantes por edad (%)":"Composición por edad (%)";
+const bars=m.ageStats.map(d=>`<div class="barItem"><div class="barVal">${((d.participacion||d.share||0)*100).toFixed(1)}</div><div class="bar" style="height:${Math.max(3,(d.participacion||d.share||0)*100)}%"></div><div class="barLab">${d.label}</div></div>`).join("");
+p.innerHTML=`
+<div class="panelHead"><div><h2>Sección ${m.seccion}<span class="pill">Seleccionada</span></h2><small>Distrito ${m.distrito} • Zona ${m.zona} • Mazatlán, Sinaloa</small></div><div class="close" onclick="clearPanel()">×</div></div>
+<div class="card chartCard"><div class="chartTitle">${chartTitle}</div><div class="barChart"><div class="yaxis"><span>90</span><span>60</span><span>30</span><span>0</span></div><div class="bars">${bars}</div></div></div>
+<div class="card rank"><h3>Top indicadores de la sección</h3>
+<div class="rankRow"><span class="rankNum">1</span><span>Participación</span><span class="rankVal">${pct(m.participacion)}</span></div>
+<div class="rankRow"><span class="rankNum">2</span><span>No voto</span><span class="rankVal">${pct(m.noVoto)}</span></div>
+<div class="rankRow"><span class="rankNum">3</span><span>Índice de oportunidad</span><span class="rankVal">${m.oportunidad.toFixed(2)}</span></div>
+<div class="rankRow"><span class="rankNum">4</span><span>Lista nominal</span><span class="rankVal">${fmt(m.ln)}</span></div>
+<div class="rankRow"><span class="rankNum">5</span><span>Aspirantes</span><span class="rankVal">${fmt(m.aspirantes||0)}</span></div>
+</div>
+<div class="grid">
+${card("☑","Participación",pct(m.participacion),"Voto estimado de la sección")}
+${card("✕","No voto",pct(m.noVoto),"Abstención / no votante")}
+${card("▤","Lista nominal",fmt(m.ln),"Base electoral")}
+${card("△","Brecha de edad",pp(m.brechaEdad),"Diferencia entre grupos")}
+${card("♟","Grupo dominante",m.grupoDominante,shareText(m.grupoShare)+" del padrón/base")}
+${card("◇","Índice de oportunidad",m.oportunidad.toFixed(2),oppText(m.oportunidad))}
+${card("#","HHI",m.hhi.toFixed(2),hhiLevel(m.hhi)+" concentración")}
+${card("✣","Cramér V",m.cramer.toFixed(2),cramerText(m.cramer))}
+${card("⬡","Tipo de composición",m.composicion,m.semaforo?("Semáforo: "+m.semaforo):"Perfil territorial")}
+</div>
+<div class="read"><div class="bolt">ϟ</div><h3>Lectura rápida de la sección</h3><p>${reading(m)}</p></div>`;
+}
+
+function card(i,t,v,s){return `<div class="card metric"><h4><span class="ico">${i}</span>${t}</h4><b>${v}</b><p>${s}</p></div>`}
+function reading(m){
+const opp=m.oportunidad>=.7?"alta":m.oportunidad>=.5?"media":"baja";
+const gap=m.brechaEdad>=.30?"amplia":m.brechaEdad>=.18?"media":"baja";
+const asp=m.aspirantes?` Registra ${fmt(m.aspirantes)} aspirantes y semáforo ${m.semaforo}.`:"";
+return `La sección ${m.seccion} presenta participación estimada de ${pct(m.participacion)} y no voto de ${pct(m.noVoto)}. El grupo dominante es ${m.grupoDominante}; la brecha de edad es ${gap} (${pp(m.brechaEdad)}). La oportunidad territorial es ${opp}, con composición ${String(m.composicion).toLowerCase()}.${asp}`;
+}
+
+function clearPanel(){
+state.selected=null;
+document.getElementById("sectionInput").value="";
+refresh();
+document.getElementById("panel").innerHTML=`<div class="empty"><div><h3>Selecciona una sección</h3><p>Haz clic en el mapa o busca una sección para ver su perfil electoral.</p></div></div>`;
+}
+
+function bind(){
+document.getElementById("indicator").onchange=e=>{state.indicator=e.target.value;refresh()};
+document.getElementById("district").onchange=e=>{state.district=e.target.value;refresh()};
+document.getElementById("zone").onchange=e=>{state.zone=e.target.value;refresh()};
+document.getElementById("composition").onchange=e=>{state.composition=e.target.value;refresh()};
+document.getElementById("dominance").onchange=e=>{state.dominance=e.target.value;refresh()};
+document.getElementById("sectionInput").onchange=e=>select(e.target.value,true);
+document.getElementById("topSearch").onkeydown=e=>{if(e.key==="Enter")select(e.target.value,true)};
+document.getElementById("swSections").onclick=e=>{state.showSections=!state.showSections;e.currentTarget.classList.toggle("on",state.showSections);refresh()};
+document.getElementById("swLabels").onclick=e=>{state.showLabels=!state.showLabels;e.currentTarget.classList.toggle("on",state.showLabels);labels()};
+document.getElementById("clear").onclick=()=>{state.indicator="participacion";state.district="all";state.zone="all";state.composition="all";state.dominance="all";["indicator","district","zone","composition","dominance"].forEach(id=>document.getElementById(id).value=id==="indicator"?"participacion":"all");refresh()};
+document.getElementById("export").onclick=()=>{if(!state.selected)return alert("Selecciona una sección primero.");const m=state.metrics.get(state.selected);const blob=new Blob([JSON.stringify(m,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`seccion_${state.selected}.json`;a.click()};
+}
+
+async function fetchJSON(file){
+const r=await fetch(`${file}?v=${Date.now()}`);
+if(!r.ok)throw new Error(`No cargó ${file}`);
+return await r.json();
+}
+
+async function load(){
+initMap();bind();
+try{
+const [geo,comp,asp]=await Promise.all([fetchJSON(FILES.geo),fetchJSON(FILES.comp),fetchJSON(FILES.asp).catch(()=>({}))]);
+state.features=geo;
+const rows=toArray(comp);
+const raw=rows.some(r=>val(r,["edad","EDAD"])!==""&&(val(r,["ln","LN"])!==""||val(r,["sv","SV"])!==""));
+if(raw){
+const groups=buildFromRaw(rows);
+groups.forEach((g,sec)=>state.metrics.set(sec,metricFromGroup(g)));
+}else{
+rows.forEach(r=>{const m=metricFromAggregate(r);if(m)state.metrics.set(m.seccion,m)});
+}
+mergeAspirantes(asp);
+state.features.features.forEach(f=>{
+const sec=getSecFromFeature(f),m=state.metrics.get(sec);
+if(m){
+const df=getDistrictFromFeature(f),zf=getZoneFromFeature(f);
+if((!m.distrito||m.distrito==="Sin dato")&&df!=="Sin dato")m.distrito=df;
+if((!m.zona||m.zona==="Sin dato")&&zf!=="Sin dato")m.zona=zf;
+}
+});
+fillFilters();draw();refresh();
+document.getElementById("loading").style.display="none";
+const first=Array.from(state.metrics.keys()).sort((a,b)=>Number(a)-Number(b))[0];
+if(first)select(first,false);
+}catch(e){
+console.error(e);
+document.getElementById("loading").innerHTML=`<div class="loadCard" style="max-width:520px;line-height:1.45"><div style="font-size:16px;margin-bottom:8px">No cargó la información</div><div style="font-size:13px;color:#475569;font-weight:700">Revisa que estén en la misma carpeta: <br><b>${FILES.geo}</b><br><b>${FILES.comp}</b><br><b>${FILES.asp}</b></div></div>`;
+}
+}
+load();
+</script>
 </body>
 </html>
