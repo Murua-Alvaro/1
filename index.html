@@ -2,532 +2,555 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Mapa de aspirantes por sección - Mazatlán</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa de Composición Electoral 2024 - Mazatlán</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
-      background: #f5f7fb;
-      color: #111827;
-    }
-
-    .panel {
-      max-width: 1280px;
-      margin: 24px auto 16px;
-      padding: 0 18px;
-      display: grid;
-      grid-template-columns: 0.8fr 1.4fr;
-      gap: 18px;
-      align-items: stretch;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: 30px;
-      line-height: 1.1;
-      color: #111827;
-    }
-
-    p {
-      margin: 0;
-      color: #475467;
-      font-size: 15px;
-      line-height: 1.5;
-    }
-
-    label {
-      font-weight: 800;
-      display: block;
-      margin-bottom: 10px;
-      color: #111827;
-      font-size: 20px;
-    }
-
-    select {
-      width: 100%;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid #d0d5dd;
-      font-size: 18px;
-      background: white;
-      margin-bottom: 14px;
-      outline: none;
-    }
-
-    select:focus {
-      border-color: #111827;
-      box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: 0;
-      border-radius: 999px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 15px;
-      background: #111827;
-      color: white;
-    }
-
-    button.secondary {
-      background: #e5e7eb;
-      color: #111827;
+      background: #f3f4f6;
     }
 
     #map {
-      max-width: 1280px;
-      height: 780px;
-      margin: 0 auto 28px;
-      border: 1px solid #d0d5dd;
-      border-radius: 22px;
-      overflow: hidden;
-      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+      width: 100vw;
+      height: 100vh;
     }
 
-    .info-box {
-      font-size: 15px;
-      line-height: 1.55;
-    }
-
-    .info-box strong {
-      font-size: 18px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 999px;
-      color: white;
-      font-weight: 800;
-      font-size: 12px;
-      margin-top: 6px;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .summary-item {
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
+    #panel {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1000;
+      background: white;
+      width: 340px;
       padding: 14px;
-      font-size: 14px;
+      border-radius: 12px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.25);
+      max-height: 92vh;
+      overflow-y: auto;
     }
 
-    .summary-item b {
-      display: block;
-      font-size: 24px;
+    h2 {
+      margin: 0 0 6px 0;
+      font-size: 17px;
       color: #111827;
-      margin-bottom: 2px;
     }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 16px;
+    .subtitulo {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 10px;
     }
 
-    .detail {
-      background: #f8fafc;
+    label {
+      display: block;
+      margin-top: 9px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #374151;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 7px;
+      margin-top: 4px;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    #resumen {
+      margin-top: 12px;
+      background: #f9fafb;
       border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 12px;
-      font-size: 14px;
-    }
-
-    .detail b {
-      display: block;
-      font-size: 20px;
-      color: #111827;
-      margin-bottom: 2px;
+      padding: 9px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #374151;
     }
 
     .legend {
       background: white;
-      padding: 12px 14px;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      font-size: 13px;
-      line-height: 1.6;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.25);
+      font-size: 12px;
+      line-height: 18px;
     }
 
     .legend span {
       display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
+      width: 14px;
+      height: 14px;
       margin-right: 6px;
+      border: 1px solid #777;
       vertical-align: middle;
-    }
-
-    @media (max-width: 1000px) {
-      .panel {
-        grid-template-columns: 1fr;
-      }
-
-      #map {
-        height: 650px;
-        border-radius: 0;
-      }
-
-      .summary,
-      .detail-grid {
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="panel">
-    <div class="card">
-      <label for="sectionSelect">Seleccionar sección</label>
-      <select id="sectionSelect">
-        <option value="">Cargando secciones...</option>
-      </select>
+<div id="panel">
+  <h2>Composición electoral 2024</h2>
+  <div class="subtitulo">Mazatlán · Secciones electorales · Edad, participación e índices</div>
 
-      <div class="actions">
-        <button id="showAllBtn" class="secondary">Ver todas las secciones</button>
-      </div>
+  <label>Ver mapa por</label>
+  <select id="variableMapa">
+    <option value="Indice_Oportunidad_0_100">Índice de oportunidad</option>
+    <option value="Participacion_Seccion">Participación de la sección</option>
+    <option value="No_Voto_Total">No voto total</option>
+    <option value="Potencial_Movilizacion_vs_Municipal">Potencial de movilización</option>
+    <option value="HHI_Grupos_Edad_0_100">HHI / concentración por edad</option>
+    <option value="Entropia_Grupos_Edad_0_100">Entropía / diversidad por edad</option>
+    <option value="Cramer_V_Grupos_Edad">Cramer V por edad</option>
+    <option value="Brecha_Max_Min_Participacion_Grupos">Brecha entre grupos de edad</option>
+    <option value="Indice_Segmentacion_Edad_0_100">Índice de segmentación por edad</option>
+    <option value="Indice_Dominancia_Grupo_0_100">Dominancia del grupo principal</option>
+  </select>
 
-      <div class="summary">
-        <div class="summary-item">
-          <b id="totalSecciones">-</b>
-          Secciones
-        </div>
-        <div class="summary-item">
-          <b id="totalAspirantes">-</b>
-          Aspirantes
-        </div>
-      </div>
+  <label>Nivel de oportunidad</label>
+  <select id="filtroOportunidad">
+    <option value="">Todos</option>
+    <option value="Alta">Alta</option>
+    <option value="Media">Media</option>
+    <option value="Seguimiento">Seguimiento</option>
+    <option value="Baja">Baja</option>
+  </select>
+
+  <label>Tipo de composición por edad</label>
+  <select id="filtroComposicion">
+    <option value="">Todos</option>
+    <option value="Concentrada">Concentrada</option>
+    <option value="Media">Media</option>
+    <option value="Diversificada">Diversificada</option>
+  </select>
+
+  <label>Fuerza de diferencia por edad</label>
+  <select id="filtroFuerza">
+    <option value="">Todos</option>
+    <option value="Alta">Alta</option>
+    <option value="Media">Media</option>
+    <option value="Baja">Baja</option>
+    <option value="No evaluable">No evaluable</option>
+  </select>
+
+  <label>Grupo dominante en votos</label>
+  <select id="filtroDominante">
+    <option value="">Todos</option>
+    <option value="18-29">18-29</option>
+    <option value="30-39">30-39</option>
+    <option value="40-49">40-49</option>
+    <option value="50-59">50-59</option>
+    <option value="60-79">60-79</option>
+    <option value="80+">80+</option>
+  </select>
+
+  <label>Grupo con mayor no voto</label>
+  <select id="filtroNoVoto">
+    <option value="">Todos</option>
+    <option value="18-29">18-29</option>
+    <option value="30-39">30-39</option>
+    <option value="40-49">40-49</option>
+    <option value="50-59">50-59</option>
+    <option value="60-79">60-79</option>
+    <option value="80+">80+</option>
+  </select>
+
+  <label>Universo operativo</label>
+  <select id="filtroUniverso">
+    <option value="">Todos</option>
+    <option value="Operativa">Operativa</option>
+    <option value="Pequeña / revisar con cuidado">Pequeña / revisar con cuidado</option>
+  </select>
+
+  <label>Buscar sección</label>
+  <input id="buscarSeccion" placeholder="Ej. 2618">
+
+  <div id="resumen">Cargando información...</div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+const map = L.map("map").setView([23.24, -106.41], 11);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "© OpenStreetMap"
+}).addTo(map);
+
+let geojsonData = null;
+let capa = null;
+let datos = {};
+let legend = null;
+
+const configVariables = {
+  Indice_Oportunidad_0_100: {
+    nombre: "Índice de oportunidad",
+    formato: "numero",
+    colores: ["#eff6ff", "#bfdbfe", "#60a5fa", "#2563eb", "#1e3a8a"]
+  },
+  Participacion_Seccion: {
+    nombre: "Participación de la sección",
+    formato: "porcentaje",
+    colores: ["#fee2e2", "#fecaca", "#f87171", "#dc2626", "#7f1d1d"]
+  },
+  No_Voto_Total: {
+    nombre: "No voto total",
+    formato: "entero",
+    colores: ["#fef9c3", "#fde68a", "#f59e0b", "#d97706", "#78350f"]
+  },
+  Potencial_Movilizacion_vs_Municipal: {
+    nombre: "Potencial de movilización",
+    formato: "entero",
+    colores: ["#f3e8ff", "#d8b4fe", "#a855f7", "#7e22ce", "#581c87"]
+  },
+  HHI_Grupos_Edad_0_100: {
+    nombre: "HHI / concentración por edad",
+    formato: "numero",
+    colores: ["#ecfdf5", "#bbf7d0", "#4ade80", "#16a34a", "#14532d"]
+  },
+  Entropia_Grupos_Edad_0_100: {
+    nombre: "Entropía / diversidad por edad",
+    formato: "numero",
+    colores: ["#f0fdfa", "#99f6e4", "#2dd4bf", "#0f766e", "#134e4a"]
+  },
+  Cramer_V_Grupos_Edad: {
+    nombre: "Cramer V por edad",
+    formato: "numero",
+    colores: ["#f9fafb", "#d1d5db", "#9ca3af", "#4b5563", "#111827"]
+  },
+  Brecha_Max_Min_Participacion_Grupos: {
+    nombre: "Brecha entre grupos de edad",
+    formato: "porcentaje",
+    colores: ["#fefce8", "#fef08a", "#eab308", "#a16207", "#713f12"]
+  },
+  Indice_Segmentacion_Edad_0_100: {
+    nombre: "Índice de segmentación por edad",
+    formato: "numero",
+    colores: ["#eef2ff", "#c7d2fe", "#818cf8", "#4f46e5", "#312e81"]
+  },
+  Indice_Dominancia_Grupo_0_100: {
+    nombre: "Dominancia del grupo principal",
+    formato: "numero",
+    colores: ["#fff7ed", "#fed7aa", "#fb923c", "#ea580c", "#7c2d12"]
+  }
+};
+
+function normalizarSeccion(x) {
+  if (x === undefined || x === null) return "";
+  return String(x).replace(".0", "").trim();
+}
+
+function obtenerSeccionGeojson(props) {
+  const posibles = [
+    "SECCION", "seccion", "Seccion", "SECCIÓN", "Sección",
+    "CVE_SECC", "CVESECC", "SECC", "secc", "id", "ID"
+  ];
+
+  for (const k of posibles) {
+    if (props[k] !== undefined && props[k] !== null) {
+      return normalizarSeccion(props[k]);
+    }
+  }
+
+  for (const k in props) {
+    if (k.toLowerCase().includes("secc")) {
+      return normalizarSeccion(props[k]);
+    }
+  }
+
+  return "";
+}
+
+function valor(d, campo) {
+  if (!d) return null;
+  const v = d[campo];
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  return isNaN(n) ? v : n;
+}
+
+function formato(v, tipo) {
+  if (v === undefined || v === null || v === "" || Number.isNaN(v)) return "Sin dato";
+
+  if (tipo === "porcentaje") {
+    return (Number(v) * 100).toFixed(2) + "%";
+  }
+
+  if (tipo === "entero") {
+    return Math.round(Number(v)).toLocaleString("es-MX");
+  }
+
+  if (typeof v === "number") {
+    return Number(v).toFixed(2);
+  }
+
+  return v;
+}
+
+function valoresVariable(variable) {
+  return Object.values(datos)
+    .map(d => Number(d[variable]))
+    .filter(v => !isNaN(v));
+}
+
+function colorPorValor(v, variable) {
+  if (v === null || v === undefined || isNaN(Number(v))) return "#d1d5db";
+
+  const valores = valoresVariable(variable);
+  if (valores.length === 0) return "#d1d5db";
+
+  const min = Math.min(...valores);
+  const max = Math.max(...valores);
+
+  if (max === min) return configVariables[variable].colores[2];
+
+  const t = (Number(v) - min) / (max - min);
+  const c = configVariables[variable].colores;
+
+  if (t <= 0.20) return c[0];
+  if (t <= 0.40) return c[1];
+  if (t <= 0.60) return c[2];
+  if (t <= 0.80) return c[3];
+  return c[4];
+}
+
+function pasaFiltros(d) {
+  if (!d) return false;
+
+  const oportunidad = document.getElementById("filtroOportunidad").value;
+  const composicion = document.getElementById("filtroComposicion").value;
+  const fuerza = document.getElementById("filtroFuerza").value;
+  const dominante = document.getElementById("filtroDominante").value;
+  const noVoto = document.getElementById("filtroNoVoto").value;
+  const universo = document.getElementById("filtroUniverso").value;
+  const buscar = document.getElementById("buscarSeccion").value.trim();
+
+  if (oportunidad && d.Nivel_Oportunidad !== oportunidad) return false;
+  if (composicion && d.Tipo_Composicion_Edad !== composicion) return false;
+  if (fuerza && d.Fuerza_Diferencia_Edad !== fuerza) return false;
+  if (dominante && d.Grupo_Dominante_Votos !== dominante) return false;
+  if (noVoto && d.Grupo_Mayor_No_Voto !== noVoto) return false;
+  if (universo && d.Universo_Operativo !== universo) return false;
+  if (buscar && normalizarSeccion(d.SECCION) !== buscar) return false;
+
+  return true;
+}
+
+function estilo(feature) {
+  const seccion = obtenerSeccionGeojson(feature.properties);
+  const d = datos[seccion];
+  const variable = document.getElementById("variableMapa").value;
+
+  if (!pasaFiltros(d)) {
+    return {
+      color: "#9ca3af",
+      weight: 0.5,
+      fillColor: "#e5e7eb",
+      fillOpacity: 0.08
+    };
+  }
+
+  const v = valor(d, variable);
+
+  return {
+    color: "#374151",
+    weight: 0.8,
+    fillColor: colorPorValor(v, variable),
+    fillOpacity: 0.78
+  };
+}
+
+function popup(feature) {
+  const seccion = obtenerSeccionGeojson(feature.properties);
+  const d = datos[seccion];
+
+  if (!d) {
+    return `<b>Sección ${seccion}</b><br>Sin datos de composición electoral.`;
+  }
+
+  return `
+    <div style="font-size:13px; min-width:270px; line-height:1.35;">
+      <b>Sección ${seccion}</b><br><br>
+
+      <b>Base electoral</b><br>
+      Lista nominal: ${formato(valor(d, "Lista_Nominal"), "entero")}<br>
+      Votantes: ${formato(valor(d, "Votantes"), "entero")}<br>
+      No voto total: ${formato(valor(d, "No_Voto_Total"), "entero")}<br>
+      Participación: ${formato(valor(d, "Participacion_Seccion"), "porcentaje")}<br><br>
+
+      <b>Oportunidad</b><br>
+      Índice: ${formato(valor(d, "Indice_Oportunidad_0_100"), "numero")}<br>
+      Nivel: ${d.Nivel_Oportunidad || "Sin dato"}<br>
+      Potencial movilización: ${formato(valor(d, "Potencial_Movilizacion_vs_Municipal"), "entero")}<br><br>
+
+      <b>Composición por edad</b><br>
+      Grupo dominante en votos: ${d.Grupo_Dominante_Votos || "Sin dato"}<br>
+      Grupo con mayor no voto: ${d.Grupo_Mayor_No_Voto || "Sin dato"}<br>
+      Grupo con mayor participación: ${d.Grupo_Mayor_Participacion || "Sin dato"}<br>
+      Grupo con menor participación: ${d.Grupo_Menor_Participacion || "Sin dato"}<br><br>
+
+      <b>Índices</b><br>
+      HHI edad: ${formato(valor(d, "HHI_Grupos_Edad_0_100"), "numero")}<br>
+      Entropía edad: ${formato(valor(d, "Entropia_Grupos_Edad_0_100"), "numero")}<br>
+      Cramer V edad: ${formato(valor(d, "Cramer_V_Grupos_Edad"), "numero")}<br>
+      Brecha edad: ${formato(valor(d, "Brecha_Max_Min_Participacion_Grupos"), "porcentaje")}<br><br>
+
+      <b>Lectura</b><br>
+      ${d.Recomendacion || "Sin recomendación"}
     </div>
+  `;
+}
 
-    <div class="card">
-      <h1 id="mainTitle">Mapa de aspirantes por sección</h1>
-      <p id="mainInfo">
-        Selecciona una sección para ver aspirantes registrados, semáforo y distribución por edad.
-      </p>
+function actualizarMapa() {
+  if (!geojsonData) return;
 
-      <div class="detail-grid" id="detailGrid" style="display:none;">
-        <div class="detail">
-          <b id="edad18">0</b>
-          18 a 29
-        </div>
-        <div class="detail">
-          <b id="edad30">0</b>
-          30 a 44
-        </div>
-        <div class="detail">
-          <b id="edad45">0</b>
-          45 a 59
-        </div>
-        <div class="detail">
-          <b id="edad60">0</b>
-          60 o más
-        </div>
-      </div>
-    </div>
-  </div>
+  if (capa) {
+    map.removeLayer(capa);
+  }
 
-  <div id="map"></div>
+  capa = L.geoJSON(geojsonData, {
+    style: estilo,
+    onEachFeature: function(feature, layer) {
+      layer.bindPopup(popup(feature));
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      layer.on("mouseover", function() {
+        layer.setStyle({
+          weight: 2,
+          color: "#111827"
+        });
+      });
 
-  <script>
-    const map = L.map('map').setView([23.245, -106.41], 11);
+      layer.on("mouseout", function() {
+        capa.resetStyle(layer);
+      });
+    }
+  }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+  actualizarResumen();
+  actualizarLeyenda();
+}
 
-    let geojsonLayer;
-    let selectedSection = null;
-    let aspirantesPorSeccion = {};
-    let geojsonDataGlobal = null;
+function actualizarResumen() {
+  let total = 0;
+  let visibles = 0;
+  let ln = 0;
+  let votos = 0;
+  let noVoto = 0;
 
-    const sectionSelect = document.getElementById('sectionSelect');
-    const showAllBtn = document.getElementById('showAllBtn');
-    const mainTitle = document.getElementById('mainTitle');
-    const mainInfo = document.getElementById('mainInfo');
-    const totalSeccionesEl = document.getElementById('totalSecciones');
-    const totalAspirantesEl = document.getElementById('totalAspirantes');
-    const detailGrid = document.getElementById('detailGrid');
-    const edad18 = document.getElementById('edad18');
-    const edad30 = document.getElementById('edad30');
-    const edad45 = document.getElementById('edad45');
-    const edad60 = document.getElementById('edad60');
+  Object.values(datos).forEach(d => {
+    total += 1;
 
-    function getSeccion(feature) {
-      return String(feature.properties.seccion);
+    if (pasaFiltros(d)) {
+      visibles += 1;
+      ln += Number(d.Lista_Nominal || 0);
+      votos += Number(d.Votantes || 0);
+      noVoto += Number(d.No_Voto_Total || 0);
+    }
+  });
+
+  const participacion = ln > 0 ? votos / ln : null;
+  const variable = document.getElementById("variableMapa").value;
+
+  document.getElementById("resumen").innerHTML = `
+    <b>Variable activa:</b> ${configVariables[variable].nombre}<br>
+    <b>Secciones visibles:</b> ${visibles} de ${total}<br>
+    <b>Lista nominal visible:</b> ${ln.toLocaleString("es-MX")}<br>
+    <b>Votantes visibles:</b> ${votos.toLocaleString("es-MX")}<br>
+    <b>No voto visible:</b> ${noVoto.toLocaleString("es-MX")}<br>
+    <b>Participación visible:</b> ${participacion === null ? "Sin dato" : (participacion * 100).toFixed(2) + "%"}
+  `;
+}
+
+function actualizarLeyenda() {
+  const variable = document.getElementById("variableMapa").value;
+  const cfg = configVariables[variable];
+  const valores = valoresVariable(variable);
+
+  if (legend) {
+    map.removeControl(legend);
+  }
+
+  legend = L.control({ position: "bottomright" });
+
+  legend.onAdd = function() {
+    const div = L.DomUtil.create("div", "legend");
+
+    if (valores.length === 0) {
+      div.innerHTML = "<b>Sin datos</b>";
+      return div;
     }
 
-    function getDistrito(feature) {
-      return String(feature.properties.distrito_l);
-    }
+    const min = Math.min(...valores);
+    const max = Math.max(...valores);
+    const colores = cfg.colores;
 
-    function getDatosSeccion(seccion) {
-      return aspirantesPorSeccion[String(seccion)] || {
-        total_aspirantes: 0,
-        semaforo: 'Rojo',
-        color: '#E53935',
-        rango_edad_principal: 'Sin datos',
-        edad_18_29: 0,
-        edad_30_44: 0,
-        edad_45_59: 0,
-        edad_60_mas: 0
-      };
-    }
+    div.innerHTML = `<b>${cfg.nombre}</b><br>`;
 
-    function getSemaforo(total) {
-      if (total < 10) return 'Rojo';
-      if (total <= 20) return 'Amarillo';
-      return 'Verde';
-    }
+    for (let i = 0; i < 5; i++) {
+      const a = min + (max - min) * (i / 5);
+      const b = min + (max - min) * ((i + 1) / 5);
 
-    function getColor(total) {
-      if (total < 10) return '#E53935';
-      if (total <= 20) return '#FBC02D';
-      return '#43A047';
-    }
-
-    function styleBySection(feature) {
-      const seccion = getSeccion(feature);
-      const datos = getDatosSeccion(seccion);
-      const total = Number(datos.total_aspirantes || 0);
-      const color = datos.color || getColor(total);
-      const isSelected = selectedSection && String(selectedSection) === String(seccion);
-
-      return {
-        color: isSelected ? '#111827' : '#334155',
-        weight: isSelected ? 4 : 1,
-        fillColor: color,
-        fillOpacity: isSelected ? 0.88 : 0.52,
-        opacity: 1
-      };
-    }
-
-    function popupContent(props) {
-      const seccion = String(props.seccion);
-      const distrito = String(props.distrito_l);
-      const datos = getDatosSeccion(seccion);
-      const total = Number(datos.total_aspirantes || 0);
-      const semaforo = datos.semaforo || getSemaforo(total);
-      const color = datos.color || getColor(total);
-
-      return `
-        <div class="info-box">
-          <strong>Sección ${seccion}</strong><br>
-          <b>Distrito:</b> ${distrito}<br>
-          <b>Aspirantes registrados:</b> ${total}<br>
-          <b>Semáforo:</b> ${semaforo}<br>
-          <b>Rango dominante:</b> ${datos.rango_edad_principal || 'Sin datos'}<br>
-          <span class="badge" style="background:${color};">${semaforo}</span>
-        </div>
+      div.innerHTML += `
+        <span style="background:${colores[i]}"></span>
+        ${formato(a, cfg.formato)} - ${formato(b, cfg.formato)}<br>
       `;
     }
 
-    function updateStats() {
-      if (!geojsonDataGlobal) return;
+    return div;
+  };
 
-      const secciones = geojsonDataGlobal.features
-        .map(f => String(f.properties.seccion))
-        .filter(Boolean);
+  legend.addTo(map);
+}
 
-      const total = secciones.reduce((acc, seccion) => {
-        return acc + Number(getDatosSeccion(seccion).total_aspirantes || 0);
-      }, 0);
+Promise.all([
+  fetch("./mazatlan_secciones_5pct_wgs84.geojson").then(r => r.json()),
+  fetch("./composicion_2024_indices.json").then(r => r.json())
+])
+.then(([geojson, indices]) => {
+  geojsonData = geojson;
 
-      totalSeccionesEl.innerText = secciones.length;
-      totalAspirantesEl.innerText = total;
-    }
+  indices.forEach(d => {
+    datos[normalizarSeccion(d.SECCION)] = d;
+  });
 
-    function updateInfoForSection(seccion) {
-      const datos = getDatosSeccion(seccion);
-      const total = Number(datos.total_aspirantes || 0);
-      const semaforo = datos.semaforo || getSemaforo(total);
-      const color = datos.color || getColor(total);
-      const distrito = datos.distrito_l || '';
+  actualizarMapa();
 
-      mainTitle.innerText = `Sección ${seccion}`;
+  const bounds = L.geoJSON(geojsonData).getBounds();
+  map.fitBounds(bounds);
+})
+.catch(error => {
+  console.error(error);
+  document.getElementById("resumen").innerHTML = `
+    <b>Error cargando archivos.</b><br>
+    Revisa que estén en la misma carpeta:<br>
+    composicion_2024_indices.json<br>
+    mazatlan_secciones_5pct_wgs84.geojson
+  `;
+});
 
-      mainInfo.innerHTML = `
-        <b>Distrito:</b> ${distrito}<br>
-        <b>Aspirantes registrados:</b> ${total}<br>
-        <b>Semáforo:</b> <span style="font-weight:800; color:${color};">${semaforo}</span><br>
-        <b>Rango de edad dominante:</b> ${datos.rango_edad_principal || 'Sin datos'}
-      `;
-
-      edad18.innerText = datos.edad_18_29 || 0;
-      edad30.innerText = datos.edad_30_44 || 0;
-      edad45.innerText = datos.edad_45_59 || 0;
-      edad60.innerText = datos.edad_60_mas || 0;
-
-      detailGrid.style.display = 'grid';
-    }
-
-    function refreshLayerStyles() {
-      if (!geojsonLayer) return;
-
-      geojsonLayer.eachLayer(layer => {
-        layer.setStyle(styleBySection(layer.feature));
-      });
-    }
-
-    function scrollToMap() {
-      document.getElementById('map').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-
-    function selectSection(seccion) {
-      selectedSection = String(seccion);
-
-      if (!geojsonLayer) return;
-
-      let targetLayer = null;
-
-      geojsonLayer.eachLayer(layer => {
-        const layerSection = getSeccion(layer.feature);
-
-        layer.setStyle(styleBySection(layer.feature));
-
-        if (String(layerSection) === String(seccion)) {
-          targetLayer = layer;
-        }
-      });
-
-      if (targetLayer) {
-        targetLayer.bringToFront();
-        updateInfoForSection(seccion);
-        refreshLayerStyles();
-
-        setTimeout(() => {
-          scrollToMap();
-          map.fitBounds(targetLayer.getBounds(), { padding: [45, 45] });
-          targetLayer.openPopup();
-        }, 150);
-      }
-    }
-
-    function showAllSections() {
-      selectedSection = null;
-      sectionSelect.value = '';
-
-      refreshLayerStyles();
-
-      if (geojsonLayer) {
-        map.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
-      }
-
-      mainTitle.innerText = 'Mapa de aspirantes por sección';
-      mainInfo.innerHTML = 'Selecciona una sección para ver aspirantes registrados, semáforo y distribución por edad.';
-      detailGrid.style.display = 'none';
-
-      updateStats();
-      scrollToMap();
-    }
-
-    Promise.all([
-      fetch('mazatlan_secciones_5pct_wgs84.geojson').then(response => response.json()),
-      fetch('secciones_aspirantes.json?v=' + Date.now()).then(response => response.json())
-    ])
-      .then(([geojsonData, aspirantesData]) => {
-        geojsonDataGlobal = geojsonData;
-        aspirantesPorSeccion = aspirantesData;
-
-        geojsonLayer = L.geoJSON(geojsonData, {
-          style: styleBySection,
-          onEachFeature: function(feature, layer) {
-            const props = feature.properties;
-            const seccion = String(props.seccion);
-
-            layer.bindPopup(() => popupContent(props));
-
-            layer.on('click', function() {
-              sectionSelect.value = seccion;
-              selectSection(seccion);
-            });
-          }
-        }).addTo(map);
-
-        map.fitBounds(geojsonLayer.getBounds(), { padding: [20, 20] });
-
-        const secciones = [...new Set(
-          geojsonData.features
-            .map(f => String(f.properties.seccion))
-            .filter(Boolean)
-        )].sort((a, b) => Number(a) - Number(b));
-
-        sectionSelect.innerHTML = '<option value="">Selecciona una sección</option>';
-
-        secciones.forEach(seccion => {
-          const option = document.createElement('option');
-          option.value = seccion;
-          option.textContent = `Sección ${seccion}`;
-          sectionSelect.appendChild(option);
-        });
-
-        updateStats();
-
-        sectionSelect.addEventListener('change', function() {
-          if (this.value) {
-            selectSection(this.value);
-          }
-        });
-
-        showAllBtn.addEventListener('click', showAllSections);
-
-        const legend = L.control({ position: 'bottomright' });
-
-        legend.onAdd = function () {
-          const div = L.DomUtil.create('div', 'legend');
-          div.innerHTML = `
-            <strong>Semáforo por sección</strong><br>
-            <span style="background:#E53935;"></span> Menor de 10<br>
-            <span style="background:#FBC02D;"></span> 10 a 20<br>
-            <span style="background:#43A047;"></span> Más de 20
-          `;
-          return div;
-        };
-
-        legend.addTo(map);
-      })
-      .catch(error => {
-        sectionSelect.innerHTML = '<option>Error al cargar datos</option>';
-        mainTitle.innerText = 'Error al cargar el mapa';
-        mainInfo.innerText = 'Revisa que los archivos mazatlan_secciones_5pct_wgs84.geojson y secciones_aspirantes.json estén en el mismo repositorio.';
-        console.error(error);
-      });
-  </script>
+[
+  "variableMapa",
+  "filtroOportunidad",
+  "filtroComposicion",
+  "filtroFuerza",
+  "filtroDominante",
+  "filtroNoVoto",
+  "filtroUniverso",
+  "buscarSeccion"
+].forEach(id => {
+  document.getElementById(id).addEventListener("change", actualizarMapa);
+  document.getElementById(id).addEventListener("keyup", actualizarMapa);
+});
+</script>
 
 </body>
 </html>
