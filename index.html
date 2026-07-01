@@ -111,8 +111,8 @@
     .popup-box {
       font-size: 13px;
       line-height: 1.35;
-      min-width: 300px;
-      max-width: 360px;
+      min-width: 320px;
+      max-width: 390px;
     }
 
     .popup-box h3 {
@@ -146,6 +146,33 @@
       font-weight: bold;
       color: #111827;
       text-align: right;
+    }
+
+    .peso-voto-grid {
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .peso-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 7px;
+      padding: 6px 8px;
+    }
+
+    .peso-card .grupo {
+      font-size: 11px;
+      color: #6b7280;
+      font-weight: bold;
+    }
+
+    .peso-card .valor {
+      font-size: 15px;
+      color: #111827;
+      font-weight: bold;
+      margin-top: 2px;
     }
   </style>
 </head>
@@ -406,6 +433,15 @@ function linea(nombre, valor) {
   return `<div class="row"><span>${nombre}</span><span>${valor}</span></div>`;
 }
 
+function pesoCard(grupo, valor) {
+  return `
+    <div class="peso-card">
+      <div class="grupo">${grupo}</div>
+      <div class="valor">${fmt(num(valor), "porcentaje")}</div>
+    </div>
+  `;
+}
+
 function popupHTML(seccion, d) {
   if (!d) {
     return `<div class="popup-box"><h3>Sección ${seccion}</h3>Sin datos de composición electoral.</div>`;
@@ -442,9 +478,20 @@ function popupHTML(seccion, d) {
       </div>
 
       <div class="popup-section">
+        <b>Peso relativo del voto por grupo de edad</b>
+        <div class="peso-voto-grid">
+          ${pesoCard("18-29", d["Pct_Votos_18-29"])}
+          ${pesoCard("30-39", d["Pct_Votos_30-39"])}
+          ${pesoCard("40-49", d["Pct_Votos_40-49"])}
+          ${pesoCard("50-59", d["Pct_Votos_50-59"])}
+          ${pesoCard("60-79", d["Pct_Votos_60-79"])}
+          ${pesoCard("80+", d["Pct_Votos_80+"])}
+        </div>
+      </div>
+
+      <div class="popup-section">
         <b>Índices</b>
         ${linea("HHI edad", fmt(num(d.HHI_Grupos_Edad_0_100), "numero"))}
-        ${linea("Entropía edad", fmt(num(d.Entropia_Grupos_Edad_0_100), "numero"))}
         ${linea("Cramer V edad", fmt(num(d.Cramer_V_Grupos_Edad), "numero"))}
         ${linea("Brecha edad", fmt(num(d.Brecha_Max_Min_Participacion_Grupos), "porcentaje"))}
         ${linea("Segmentación edad", fmt(num(d.Indice_Segmentacion_Edad_0_100), "numero"))}
